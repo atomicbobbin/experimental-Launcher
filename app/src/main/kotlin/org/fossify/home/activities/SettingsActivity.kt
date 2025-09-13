@@ -5,6 +5,7 @@ import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
+import androidx.appcompat.app.AlertDialog
 import org.fossify.commons.dialogs.RadioGroupDialog
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getProperPrimaryColor
@@ -20,6 +21,8 @@ import org.fossify.home.helpers.MAX_COLUMN_COUNT
 import org.fossify.home.helpers.MAX_ROW_COUNT
 import org.fossify.home.helpers.MIN_COLUMN_COUNT
 import org.fossify.home.helpers.MIN_ROW_COUNT
+import org.fossify.home.helpers.*
+import org.fossify.home.core.ServiceLocator
 import org.fossify.home.receivers.LockDeviceAdminReceiver
 import java.util.Locale
 import kotlin.system.exitProcess
@@ -64,6 +67,14 @@ class SettingsActivity : SimpleActivity() {
         setupSuggestionsCount()
         setupHomeRowCount()
         setupHomeColumnCount()
+        setupHomeIconSize()
+        setupDrawerIconSize()
+        setupGridMargin()
+        setupBlurEffects()
+        setupBlurIntensity()
+        setupTransitionEffects()
+        setupNotificationBadges()
+        setupBadgeStyle()
         setupLabelControls()
         setupFolderStyle()
         setupLockHomeLayout()
@@ -269,6 +280,243 @@ class SettingsActivity : SimpleActivity() {
                 }
             }
         }
+    }
+
+    private fun setupHomeIconSize() {
+        val currentScale = config.homeIconSizeScale
+        binding.settingsHomeIconSize.text = "${currentScale}%"
+        binding.settingsHomeIconSizeHolder.setOnClickListener {
+            val items = ArrayList<RadioItem>()
+            for (scale in MIN_ICON_SIZE_SCALE..MAX_ICON_SIZE_SCALE step 10) {
+                items.add(RadioItem(scale, "${scale}%"))
+            }
+            RadioGroupDialog(this, items, currentScale) { selected ->
+                config.homeIconSizeScale = selected as Int
+                setupHomeIconSize()
+                refreshHomeScreenGrid()
+            }
+        }
+    }
+
+    private fun setupDrawerIconSize() {
+        val currentScale = config.drawerIconSizeScale
+        binding.settingsDrawerIconSize.text = "${currentScale}%"
+        binding.settingsDrawerIconSizeHolder.setOnClickListener {
+            val items = ArrayList<RadioItem>()
+            for (scale in MIN_ICON_SIZE_SCALE..MAX_ICON_SIZE_SCALE step 10) {
+                items.add(RadioItem(scale, "${scale}%"))
+            }
+            RadioGroupDialog(this, items, currentScale) { selected ->
+                config.drawerIconSizeScale = selected as Int
+                setupDrawerIconSize()
+                refreshDrawerIcons()
+            }
+        }
+    }
+
+    private fun setupGridMargin() {
+        val currentMargin = config.gridMarginSize
+        binding.settingsGridMargin.text = "${currentMargin}dp"
+        binding.settingsGridMarginHolder.setOnClickListener {
+            val items = ArrayList<RadioItem>()
+            for (margin in MIN_GRID_MARGIN..MAX_GRID_MARGIN) {
+                val label = if (margin == 0) "Default" else "${margin}dp"
+                items.add(RadioItem(margin, label))
+            }
+            RadioGroupDialog(this, items, currentMargin) { selected ->
+                config.gridMarginSize = selected as Int
+                setupGridMargin()
+                refreshHomeScreenGrid()
+            }
+        }
+    }
+
+    private fun refreshHomeScreenGrid() {
+        // Notify MainActivity to refresh the home screen grid
+        val intent = Intent("org.fossify.home.REFRESH_GRID")
+        sendBroadcast(intent)
+    }
+
+    private fun refreshDrawerIcons() {
+        // Notify MainActivity to refresh the drawer icons
+        val intent = Intent("org.fossify.home.REFRESH_DRAWER")
+        sendBroadcast(intent)
+    }
+
+    private fun setupBlurEffects() {
+        // Only show blur settings if device supports it
+        val supportsBlur = ServiceLocator.deviceCapabilities.supportsRenderEffectBlur
+        binding.settingsVisualEffectsLabel.beVisibleIf(supportsBlur)
+        binding.settingsBlurEffectsHolder.beVisibleIf(supportsBlur)
+        binding.settingsBlurIntensityHolder.beVisibleIf(supportsBlur)
+
+        if (!supportsBlur) return
+
+        binding.settingsBlurEffects.isChecked = config.enableBlurEffects
+        binding.settingsBlurEffectsHolder.setOnClickListener {
+            binding.settingsBlurEffects.toggle()
+            config.enableBlurEffects = binding.settingsBlurEffects.isChecked
+            refreshBlurEffects()
+            setupBlurIntensity() // Update intensity visibility
+        }
+    }
+
+    private fun setupBlurIntensity() {
+        val supportsBlur = ServiceLocator.deviceCapabilities.supportsRenderEffectBlur
+        val blurEnabled = config.enableBlurEffects
+        binding.settingsBlurIntensityHolder.beVisibleIf(supportsBlur && blurEnabled)
+
+        if (!supportsBlur || !blurEnabled) return
+
+        val currentIntensity = config.blurIntensity
+        binding.settingsBlurIntensity.text = currentIntensity.toString()
+        binding.settingsBlurIntensityHolder.setOnClickListener {
+            val items = ArrayList<RadioItem>()
+            for (intensity in MIN_BLUR_INTENSITY..MAX_BLUR_INTENSITY step 5) {
+                items.add(RadioItem(intensity, intensity.toString()))
+            }
+            RadioGroupDialog(this, items, currentIntensity) { selected ->
+                config.blurIntensity = selected as Int
+                setupBlurIntensity()
+                refreshBlurEffects()
+            }
+        }
+    }
+
+    private fun refreshBlurEffects() {
+        // Notify MainActivity to refresh blur effects
+        val intent = Intent("org.fossify.home.REFRESH_BLUR")
+        sendBroadcast(intent)
+    }
+
+    private fun setupTransitionEffects() {
+        val currentMode = config.transitionEffectMode
+        binding.settingsTransitionEffects.text = when (currentMode) {
+            TRANSITION_NONE -> getString(R.string.transition_none)
+            TRANSITION_FADE -> getString(R.string.transition_fade)
+            TRANSITION_SLIDE -> getString(R.string.transition_slide)
+            TRANSITION_ZOOM -> getString(R.string.transition_zoom)
+            TRANSITION_FLIP -> getString(R.string.transition_flip)
+            else -> getString(R.string.transition_slide)
+        }
+        
+        binding.settingsTransitionEffectsHolder.setOnClickListener {
+            val items = listOf(
+                RadioItem(TRANSITION_NONE, getString(R.string.transition_none)),
+                RadioItem(TRANSITION_FADE, getString(R.string.transition_fade)),
+                RadioItem(TRANSITION_SLIDE, getString(R.string.transition_slide)),
+                RadioItem(TRANSITION_ZOOM, getString(R.string.transition_zoom)),
+                RadioItem(TRANSITION_FLIP, getString(R.string.transition_flip))
+            )
+            RadioGroupDialog(this, ArrayList(items), currentMode) { selected ->
+                config.transitionEffectMode = selected as Int
+                setupTransitionEffects()
+                refreshTransitionEffects()
+            }
+        }
+    }
+
+    private fun refreshTransitionEffects() {
+        // Notify MainActivity to refresh transition effects
+        val intent = Intent("org.fossify.home.REFRESH_TRANSITIONS")
+        sendBroadcast(intent)
+    }
+
+    private fun setupNotificationBadges() {
+        binding.settingsNotificationBadges.isChecked = config.enableNotificationBadges
+        binding.settingsNotificationBadgesHolder.setOnClickListener {
+            if (!binding.settingsNotificationBadges.isChecked) {
+                // Request notification listener permission
+                requestNotificationListenerPermission()
+            } else {
+                // Disable badges
+                binding.settingsNotificationBadges.toggle()
+                config.enableNotificationBadges = binding.settingsNotificationBadges.isChecked
+                setupBadgeStyle() // Update badge style visibility
+                refreshNotificationBadges()
+            }
+        }
+    }
+
+    private fun setupBadgeStyle() {
+        val badgesEnabled = config.enableNotificationBadges
+        binding.settingsBadgeStyleHolder.beVisibleIf(badgesEnabled)
+
+        if (!badgesEnabled) return
+
+        val currentStyle = config.notificationBadgeStyle
+        binding.settingsBadgeStyle.text = when (currentStyle) {
+            BADGE_STYLE_DOT -> getString(R.string.badge_style_dot)
+            BADGE_STYLE_COUNT -> getString(R.string.badge_style_count)
+            BADGE_STYLE_LARGE_DOT -> getString(R.string.badge_style_large_dot)
+            else -> getString(R.string.badge_style_dot)
+        }
+        
+        binding.settingsBadgeStyleHolder.setOnClickListener {
+            val items = listOf(
+                RadioItem(BADGE_STYLE_DOT, getString(R.string.badge_style_dot)),
+                RadioItem(BADGE_STYLE_COUNT, getString(R.string.badge_style_count)),
+                RadioItem(BADGE_STYLE_LARGE_DOT, getString(R.string.badge_style_large_dot))
+            )
+            RadioGroupDialog(this, ArrayList(items), currentStyle) { selected ->
+                config.notificationBadgeStyle = selected as Int
+                setupBadgeStyle()
+                refreshNotificationBadges()
+            }
+        }
+    }
+
+    private fun requestNotificationListenerPermission() {
+        val dialogBuilder = AlertDialog.Builder(this)
+        dialogBuilder.setTitle(R.string.notification_access_required)
+        dialogBuilder.setMessage(R.string.notification_access_description)
+        dialogBuilder.setPositiveButton(R.string.grant_access) { _, _ ->
+            // Open notification listener settings
+            try {
+                val intent = Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+                startActivity(intent)
+            } catch (e: Exception) {
+                // Fallback to general settings
+                val intent = Intent(android.provider.Settings.ACTION_SETTINGS)
+                startActivity(intent)
+            }
+        }
+        dialogBuilder.setNegativeButton(android.R.string.cancel, null)
+        dialogBuilder.show()
+    }
+
+    private fun refreshNotificationBadges() {
+        // Notify MainActivity to refresh notification badges
+        val intent = Intent("org.fossify.home.REFRESH_BADGES")
+        sendBroadcast(intent)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Check if notification listener permission was granted
+        if (isNotificationListenerEnabled()) {
+            if (!config.enableNotificationBadges && binding.settingsNotificationBadges.isChecked) {
+                config.enableNotificationBadges = true
+                setupBadgeStyle()
+                refreshNotificationBadges()
+            }
+        } else {
+            if (config.enableNotificationBadges) {
+                config.enableNotificationBadges = false
+                binding.settingsNotificationBadges.isChecked = false
+                setupBadgeStyle()
+                refreshNotificationBadges()
+            }
+        }
+    }
+
+    private fun isNotificationListenerEnabled(): Boolean {
+        val packageName = packageName
+        val flat = android.provider.Settings.Secure.getString(
+            contentResolver,
+            "enabled_notification_listeners"
+        )
+        return flat?.contains(packageName) == true
     }
 
     private fun setupLabelControls() {

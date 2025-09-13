@@ -566,6 +566,215 @@
                     tools:text="3" />
 
             </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_home_icon_size_holder"
+                style="@style/SettingsHolderTextViewOneLinerStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ripple_background">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_home_icon_size_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/home_icon_size" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_home_icon_size"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_home_icon_size_label"
+                    tools:text="100%" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_drawer_icon_size_holder"
+                style="@style/SettingsHolderTextViewOneLinerStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ripple_background">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_drawer_icon_size_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/drawer_icon_size" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_drawer_icon_size"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_drawer_icon_size_label"
+                    tools:text="100%" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_grid_margin_holder"
+                style="@style/SettingsHolderTextViewOneLinerStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ripple_background">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_grid_margin_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/grid_margin" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_grid_margin"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_grid_margin_label"
+                    tools:text="0dp" />
+
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/settings_visual_effects_label"
+                style="@style/SettingsSectionLabelStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/visual_effects" />
+
+            <RelativeLayout
+                android:id="@+id/settings_blur_effects_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ripple_background">
+
+                <org.fossify.commons.views.MySwitchCompat
+                    android:id="@+id/settings_blur_effects"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="@dimen/medium_margin"
+                    android:background="@null"
+                    android:clickable="false" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_blur_effects_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:layout_toStartOf="@+id/settings_blur_effects"
+                    android:text="@string/blur_effects" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_blur_intensity_holder"
+                style="@style/SettingsHolderTextViewOneLinerStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ripple_background">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_blur_intensity_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/blur_intensity" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_blur_intensity"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_blur_intensity_label"
+                    tools:text="15" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_transition_effects_holder"
+                style="@style/SettingsHolderTextViewOneLinerStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ripple_background">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_transition_effects_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/transition_effects" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_transition_effects"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_transition_effects_label"
+                    tools:text="Slide" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_notification_badges_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ripple_background">
+
+                <org.fossify.commons.views.MySwitchCompat
+                    android:id="@+id/settings_notification_badges"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="@dimen/medium_margin"
+                    android:background="@null"
+                    android:clickable="false" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_notification_badges_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:layout_toStartOf="@+id/settings_notification_badges"
+                    android:text="@string/notification_badges" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_badge_style_holder"
+                style="@style/SettingsHolderTextViewOneLinerStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ripple_background">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_badge_style_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/badge_style" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_badge_style"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_badge_style_label"
+                    tools:text="Dot" />
+
+            </RelativeLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

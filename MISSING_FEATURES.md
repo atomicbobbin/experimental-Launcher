@@ -16,14 +16,14 @@ This file lists features present in Smart Launcher, Samsung One UI Home, Pixel L
 - (Partial) [f003] Icon pack support (selector scaffold; parsing TBD)
 - (Basic) [f004] Adaptive/custom icon shape controls (basic masks)
 - [f006] Normalize icon sizes for consistency
-- [f007] Background blur/translucency for folders and App Drawer
+- ✅ (Completed) [f007] Background blur/translucency for folders and App Drawer
 - [f010] Drawer tabs/groups (organize apps into tabs)
 - [f011] App drawer layout variants (vertical/horizontal/list) and background customization
 - [f012] Toggle between App Drawer mode and Home‑only mode
 - [f013] Deeper gesture customization (map multiple gestures to actions)
 - [f014] Per‑icon and per‑folder swipe actions (secondary actions)
 - [f015] Pull‑down gesture for notifications/quick settings
-- [f016] Desktop/drawer transition and scroll effects
+- ✅ (Completed) [f016] Desktop/drawer transition and scroll effects
 - [f020] Third‑party deep search integrations (e.g., Sesame)
 - [f021] Widget picker search and suggested widgets
 - [f022] Popup widgets attached to app icons
@@ -38,9 +38,9 @@ This file lists features present in Smart Launcher, Samsung One UI Home, Pixel L
 - [f032] Automatic app categorization in the App Drawer (smart categories)
 - [f036] Work profile tab/badging and quick toggle
 - [f037] Rename app labels
-- [f038] Grid margin/gap customization (grid size already supported)
-- [f039] Icon size customization
-- [f040] Notification badges/dots with multiple providers/styles
+- ✅ (Completed) [f038] Grid margin/gap customization (grid size already supported)
+- ✅ (Completed) [f039] Icon size customization
+- ✅ (Completed) [f040] Notification badges/dots with multiple providers/styles
 
 ### Smart Launcher
 1. [f013] Deeper gesture customization (map multiple gestures to actions)
@@ -53,14 +53,14 @@ This file lists features present in Smart Launcher, Samsung One UI Home, Pixel L
 
 ### Samsung One UI Home
 1. [f027] Home screen landscape rotation support
-2. [f007] Background blur/translucency for folders and App Drawer
+2. ✅ (Completed) [f007] Background blur/translucency for folders and App Drawer
 3. [f012] Toggle between App Drawer mode and Home‑only mode
-4. [f040] App icon badges (unread dots/counters)
+4. ✅ (Completed) [f040] App icon badges (unread dots/counters)
 5. [f023] Stackable "Smart Widgets" (widget stacks)
 6. [f030] App Pairs (launch split‑screen pairs)
 7. [f031] Edge Panels and system‑level One‑handed mode integrations (OEM‑specific)
-8. [f038] Grid size and margin customization
-9. [f039] Icon size customization
+8. ✅ (Completed) [f038] Grid size and margin customization
+9. ✅ (Completed) [f039] Icon size customization
 
 ### Google Pixel Launcher
 1. [f024] "At a Glance" widget with smart signals (calendar, weather, commute, timers, etc.)
@@ -69,21 +69,21 @@ This file lists features present in Smart Launcher, Samsung One UI Home, Pixel L
 4. [f021] Widget picker search and suggested widgets
 
 ### Nova Launcher
-1. [f016] Desktop/drawer transition/scroll effects
+1. ✅ (Completed) [f016] Desktop/drawer transition/scroll effects
 2. [f003] Icon pack support
 3. [f004] Adaptive/custom icon shapes
-4. [f039] Icon size customization
+4. ✅ (Completed) [f039] Icon size customization
 5. [f013] Extensive gesture mapping (pinch, double‑swipe, etc.) to arbitrary actions
 6. [f014] Per‑icon and per‑folder swipe actions (secondary action when swiping on an icon)
 7. [f022] Popup widgets attached to app icons
-8. [f040] Notification badges/dots with multiple providers/styles
+8. ✅ (Completed) [f040] Notification badges/dots with multiple providers/styles
 9. [f010] Drawer tabs/groups
 10. [f011] Advanced drawer layouts (vertical/horizontal/list) and background customization
 11. [f026] Subgrid positioning (place items between cells for fine layout)
 12. [f020] Third‑party deep search integration (e.g., Sesame) for shortcuts and in‑app results
 13. [f037] Rename app labels
 14. [f015] Pull‑down gesture for notifications/quick settings
-15. [f038] Grid size and margin customization
+15. ✅ (Completed) [f038] Grid size and margin customization
 
 ### Implementation Risks & Solutions
 - Icon pack support [f003]
@@ -115,18 +115,18 @@ This file lists features present in Smart Launcher, Samsung One UI Home, Pixel L
   - Solution: Use virtualized lists; fast scrollers; contrast checks; presets with sensible defaults.
 
 ### Recommended Development Order
-0. (Done) Run Foundational Restructures (pre‑work) to establish stable architecture
-1. Desktop/drawer transition effects [f016] (select few performant ones)
-2. Icon pack support [f003] and adaptive icon shapes [f004] (foundation for visuals)
-3. Normalize icon sizes [f006] and Icon size customization [f039]
-4. Grid margin/gap customization [f038]
-5. Notification badges/dots [f040] (optional listener; provider abstraction)
-6. Background blur/translucency [f007] (gate by capability and API)
+0. ✅ (Done) Run Foundational Restructures (pre‑work) to establish stable architecture
+1. ✅ (Done) Desktop/drawer transition effects [f016] (select few performant ones)
+2. ✅ (Done) Icon size customization [f039] and Grid margin/gap customization [f038] 
+3. ✅ (Done) Background blur/translucency [f007] (gate by capability and API)
+4. ✅ (Done) Notification badges/dots [f040] (optional listener; provider abstraction)
+5. Icon pack support [f003] and adaptive icon shapes [f004] (foundation for visuals)
+6. Normalize icon sizes [f006] 
 7. Popup widgets [f022] and per-icon/folder swipe actions [f014] (UI + gesture routing)
 8. Drawer tabs/groups [f010] and app drawer layout variants [f011] (DB and UI complexity)
 9. Deeper gesture customization [f013] and pull‑down gesture [f015]
 10. Toggle between App Drawer and Home‑only modes [f012]
-11. “At a Glance”/Smart Page [f024] (modular providers)
+11. "At a Glance"/Smart Page [f024] (modular providers)
 12. Widget picker search and suggested widgets [f021]
 13. Automatic app categorization [f032] (offline heuristics + overrides)
 14. Stackable widgets [f023] (custom host container)

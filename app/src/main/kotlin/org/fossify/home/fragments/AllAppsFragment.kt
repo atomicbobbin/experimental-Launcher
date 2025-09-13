@@ -68,6 +68,8 @@ class AllAppsFragment(
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         setupDrawerBackground()
+        // Apply blur effect to drawer background
+        org.fossify.home.effects.BlurUtils.applyDrawerBlur(this)
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -309,5 +311,19 @@ class AllAppsFragment(
         }
 
         return false
+    }
+
+    fun refreshIconSettings() {
+        getAdapter()?.refreshIconSettings()
+    }
+
+    fun refreshBlurEffects() {
+        // Apply blur to the drawer background
+        org.fossify.home.effects.BlurUtils.applyDrawerBlur(this)
+    }
+
+    fun refreshNotificationBadges() {
+        // Refresh the adapter to update notification badges
+        getAdapter()?.notifyDataSetChanged()
     }
 }

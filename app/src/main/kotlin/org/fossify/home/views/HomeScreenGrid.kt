@@ -87,8 +87,9 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     var cellWidth = 0
     var cellHeight = 0
 
-    private var iconMargin =
-        (context.resources.getDimension(R.dimen.icon_side_margin) * 5 / columnCount).toInt()
+    private var baseIconMargin =
+        context.resources.getDimension(R.dimen.icon_side_margin).toInt()
+    private var iconMargin = calculateIconMargin()
     private var labelSideMargin =
         context.resources.getDimension(org.fossify.commons.R.dimen.small_margin).toInt()
     private var roundedCornerRadius =
@@ -150,6 +151,18 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     var itemClickListener: ((HomeScreenGridItem) -> Unit)? = null
     var itemLongClickListener: ((HomeScreenGridItem) -> Unit)? = null
 
+    private fun calculateIconMargin(): Int {
+        val config = context.config
+        val baseMargin = (baseIconMargin * 5 / columnCount).toInt()
+        return baseMargin + config.gridMarginSize
+    }
+
+    private fun calculateIconSize(cellWidth: Int, cellHeight: Int): Int {
+        val config = context.config
+        val baseSize = min(cellWidth, cellHeight) - 2 * iconMargin
+        val scaleFactor = config.homeIconSizeScale / 100f
+        return (baseSize * scaleFactor).toInt()
+    }
 
     init {
         ViewCompat.setAccessibilityDelegate(this, accessibilityHelper)
@@ -250,8 +263,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
             columnCount = newColumnCount
             cells.clear()
             gridCenters.clear()
-            iconMargin =
-                (context.resources.getDimension(R.dimen.icon_side_margin) * 5 / columnCount).toInt()
+            iconMargin = calculateIconMargin()
             isFirstDraw = true
             gridItems.filter { it.type == ITEM_TYPE_WIDGET }.forEach {
                 appWidgetHost.deleteAppWidgetId(it.widgetId)
@@ -1545,7 +1557,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         } else {
             0
         }
-        iconSize = min(cellWidth, cellHeight) - 2 * iconMargin
+        iconSize = calculateIconSize(cellWidth, cellHeight)
         pageIndicatorsYPos = (rowCount - 1) * cellHeight + extraYMargin
         for (i in 0 until columnCount) {
             for (j in 0 until rowCount) {
@@ -1847,6 +1859,22 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
 
     fun getCurrentIconSize(): Int = iconSize
 
+    fun refreshIconSettings() {
+        iconMargin = calculateIconMargin()
+        redrawGrid()
+    }
+
+    fun refreshBlurEffects() {
+        // Apply blur effects to the grid background when folders are opened
+        currentlyOpenFolder?.let { folder ->
+            org.fossify.home.effects.BlurUtils.applyFolderBlur(this)
+        }
+    }
+
+    fun refreshNotificationBadges() {
+        // Trigger a redraw to update notification badges
+        redrawGrid()
+    }
 
     fun setSwipeMovement(diffX: Float) {
         if (draggedItem == null) {
@@ -1861,6 +1889,8 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     fun openFolder(folder: HomeScreenGridItem) {
         if (currentlyOpenFolder == null) {
             currentlyOpenFolder = folder.toFolder(animateOpening = true)
+            // Apply blur effect to the grid background
+            org.fossify.home.effects.BlurUtils.applyFolderBlur(this)
             redrawGrid()
         } else if (currentlyOpenFolder?.item?.id != folder.id) {
             closeFolder()
@@ -1884,6 +1914,10 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     }
 
     fun closeFolder(redraw: Boolean = false) {
+        currentlyOpenFolder?.let { folder ->
+            // Clear blur effect from grid background
+            org.fossify.home.effects.BlurUtils.clearBlurFromView(this)
+        }
         currentlyOpenFolder?.animateClosing {
             currentlyOpenFolder = null
             if (redraw) {
@@ -1960,7 +1994,21 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
                 }
             }
 
-            drawable?.draw(this)
+            // Apply notification badge if enabled and available
+            val badgeManager = org.fossify.home.notifications.BadgeManager(context)
+            val settings = org.fossify.home.core.ServiceLocator.settingsRepository
+            
+            if (settings.enableNotificationBadges && item.type == ITEM_TYPE_ICON) {
+                val badgeCount = badgeManager.getBadgeCount(item.packageName)
+                if (badgeCount > 0 && drawable != null) {
+                    val badgedDrawable = badgeManager.createBadgedDrawable(drawable, item.packageName, badgeCount)
+                    badgedDrawable.draw(this)
+                } else {
+                    drawable?.draw(this)
+                }
+            } else {
+                drawable?.draw(this)
+            }
         }
     }
 
@@ -1996,6 +2044,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
             if (animateOpening) {
                 scale = 0f
                 post {
+                    // Use default folder animation with scale
                     ValueAnimator.ofFloat(0f, 1f)
                         .apply {
                             interpolator = DecelerateInterpolator()

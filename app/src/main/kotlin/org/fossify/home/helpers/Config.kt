@@ -96,4 +96,36 @@ class Config(context: Context) : BaseConfig(context) {
     var predictiveSuggestionsCount: Int
         get() = prefs.getInt(PREDICTIVE_SUGGESTIONS_COUNT, 4)
         set(value) = prefs.edit().putInt(PREDICTIVE_SUGGESTIONS_COUNT, value).apply()
+
+    var homeIconSizeScale: Int
+        get() = prefs.getInt(HOME_ICON_SIZE_SCALE, DEFAULT_ICON_SIZE_SCALE)
+        set(value) = prefs.edit().putInt(HOME_ICON_SIZE_SCALE, value).apply()
+
+    var drawerIconSizeScale: Int
+        get() = prefs.getInt(DRAWER_ICON_SIZE_SCALE, DEFAULT_ICON_SIZE_SCALE)
+        set(value) = prefs.edit().putInt(DRAWER_ICON_SIZE_SCALE, value).apply()
+
+    var gridMarginSize: Int
+        get() = prefs.getInt(GRID_MARGIN_SIZE, DEFAULT_GRID_MARGIN)
+        set(value) = prefs.edit().putInt(GRID_MARGIN_SIZE, value).apply()
+
+    var enableBlurEffects: Boolean
+        get() = prefs.getBoolean(ENABLE_BLUR_EFFECTS, false)
+        set(value) = prefs.edit().putBoolean(ENABLE_BLUR_EFFECTS, value).apply()
+
+    var blurIntensity: Int
+        get() = prefs.getInt(BLUR_INTENSITY, DEFAULT_BLUR_INTENSITY)
+        set(value) = prefs.edit().putInt(BLUR_INTENSITY, value).apply()
+
+    var transitionEffectMode: Int
+        get() = prefs.getInt(TRANSITION_EFFECT_MODE, DEFAULT_TRANSITION_MODE)
+        set(value) = prefs.edit().putInt(TRANSITION_EFFECT_MODE, value).apply()
+
+    var enableNotificationBadges: Boolean
+        get() = prefs.getBoolean(ENABLE_NOTIFICATION_BADGES, false)
+        set(value) = prefs.edit().putBoolean(ENABLE_NOTIFICATION_BADGES, value).apply()
+
+    var notificationBadgeStyle: Int
+        get() = prefs.getInt(NOTIFICATION_BADGE_STYLE, DEFAULT_BADGE_STYLE)
+        set(value) = prefs.edit().putInt(NOTIFICATION_BADGE_STYLE, value).apply()
 }

@@ -101,6 +101,8 @@ import org.fossify.home.receivers.LockDeviceAdminReceiver
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import android.content.BroadcastReceiver
+import android.content.IntentFilter
 
 class MainActivity : SimpleActivity(), FlingListener {
     private var mTouchDownX = -1
@@ -124,6 +126,28 @@ class MainActivity : SimpleActivity(), FlingListener {
 
     private lateinit var mDetector: GestureDetectorCompat
     private val binding by viewBinding(ActivityMainBinding::inflate)
+
+    private val settingsReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                "org.fossify.home.REFRESH_GRID" -> {
+                    binding.homeScreenGrid.root.refreshIconSettings()
+                }
+                "org.fossify.home.REFRESH_DRAWER" -> {
+                    binding.allAppsFragment.refreshIconSettings()
+                }
+                "org.fossify.home.REFRESH_BLUR" -> {
+                    refreshBlurEffects()
+                }
+                "org.fossify.home.REFRESH_TRANSITIONS" -> {
+                    // Transition effects are applied dynamically, no refresh needed
+                }
+                "org.fossify.home.REFRESH_BADGES" -> {
+                    refreshNotificationBadges()
+                }
+            }
+        }
+    }
 
     companion object {
         private var mLastUpEvent = 0L
@@ -172,6 +196,41 @@ class MainActivity : SimpleActivity(), FlingListener {
 
         if (!isDefaultLauncher()) {
             requestHomeRole()
+        }
+
+        // Register broadcast receivers for settings changes
+        registerSettingsBroadcastReceivers()
+    }
+
+    private fun registerSettingsBroadcastReceivers() {
+        val filter = IntentFilter().apply {
+            addAction("org.fossify.home.REFRESH_GRID")
+            addAction("org.fossify.home.REFRESH_DRAWER")
+            addAction("org.fossify.home.REFRESH_BLUR")
+            addAction("org.fossify.home.REFRESH_TRANSITIONS")
+            addAction("org.fossify.home.REFRESH_BADGES")
+        }
+        registerReceiver(settingsReceiver, filter)
+    }
+
+    private fun refreshBlurEffects() {
+        // Apply blur to folder backgrounds and app drawer
+        binding.allAppsFragment.refreshBlurEffects()
+        binding.homeScreenGrid.root.refreshBlurEffects()
+    }
+
+    private fun refreshNotificationBadges() {
+        // Refresh notification badges on home screen and drawer
+        binding.homeScreenGrid.root.refreshNotificationBadges()
+        binding.allAppsFragment.refreshNotificationBadges()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        try {
+            unregisterReceiver(settingsReceiver)
+        } catch (e: IllegalArgumentException) {
+            // Receiver was not registered
         }
     }
 
@@ -586,10 +645,17 @@ class MainActivity : SimpleActivity(), FlingListener {
     }
 
     private fun showFragment(fragment: ViewBinding, animationDuration: Long = ANIMATION_DURATION) {
-        ObjectAnimator.ofFloat(fragment.root, "y", 0f).apply {
-            duration = animationDuration
-            interpolator = DecelerateInterpolator()
-            start()
+        // Apply enhanced transition effects
+        org.fossify.home.effects.TransitionEffects.applyDrawerTransition(
+            fragment.root,
+            isOpening = true
+        ) {
+            // Fallback to default animation if transition effects fail
+            ObjectAnimator.ofFloat(fragment.root, "y", 0f).apply {
+                duration = animationDuration
+                interpolator = DecelerateInterpolator()
+                start()
+            }
         }
 
         window.navigationBarColor = resources.getColor(R.color.semitransparent_navigation)
@@ -618,10 +684,17 @@ class MainActivity : SimpleActivity(), FlingListener {
     }
 
     private fun hideFragment(fragment: ViewBinding, animationDuration: Long = ANIMATION_DURATION) {
-        ObjectAnimator.ofFloat(fragment.root, "y", mScreenHeight.toFloat()).apply {
-            duration = animationDuration
-            interpolator = DecelerateInterpolator()
-            start()
+        // Apply enhanced transition effects
+        org.fossify.home.effects.TransitionEffects.applyDrawerTransition(
+            fragment.root,
+            isOpening = false
+        ) {
+            // Fallback to default animation if transition effects fail
+            ObjectAnimator.ofFloat(fragment.root, "y", mScreenHeight.toFloat()).apply {
+                duration = animationDuration
+                interpolator = DecelerateInterpolator()
+                start()
+            }
         }
 
         window.navigationBarColor = Color.TRANSPARENT

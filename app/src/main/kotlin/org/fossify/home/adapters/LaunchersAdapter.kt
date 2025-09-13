@@ -64,7 +64,9 @@ class LaunchersAdapter(
 
     private fun calculateIconWidth() {
         val currentColumnCount = activity.config.drawerColumnCount
-        val iconWidth = activity.realScreenSize.x / currentColumnCount
+        val baseIconWidth = activity.realScreenSize.x / currentColumnCount
+        val scaleFactor = activity.config.drawerIconSizeScale / 100f
+        val iconWidth = (baseIconWidth * scaleFactor).toInt()
         iconPadding = (iconWidth * 0.1f).toInt()
     }
 
@@ -73,6 +75,28 @@ class LaunchersAdapter(
         if (newTextColor != textColor) {
             textColor = newTextColor
             notifyDataSetChanged()
+        }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun refreshIconSettings() {
+        calculateIconWidth()
+        notifyDataSetChanged()
+    }
+
+    private fun applyNotificationBadge(drawable: Drawable, packageName: String): Drawable {
+        val badgeManager = org.fossify.home.notifications.BadgeManager(activity)
+        val settings = org.fossify.home.core.ServiceLocator.settingsRepository
+        
+        return if (settings.enableNotificationBadges) {
+            val badgeCount = badgeManager.getBadgeCount(packageName)
+            if (badgeCount > 0) {
+                badgeManager.createBadgedDrawable(drawable, packageName, badgeCount)
+            } else {
+                drawable
+            }
+        } else {
+            drawable
         }
     }
 
@@ -88,7 +112,8 @@ class LaunchersAdapter(
                 binding.launcherIcon.setPadding(iconPadding, iconPadding, iconPadding, 0)
 
                 if (launcher.drawable != null && binding.launcherIcon.tag == true) {
-                    binding.launcherIcon.setImageDrawable(launcher.drawable)
+                    val badgedDrawable = applyNotificationBadge(launcher.drawable!!, launcher.packageName)
+                    binding.launcherIcon.setImageDrawable(badgedDrawable)
                 } else {
                     val placeholderDrawable = activity.resources.getColoredDrawableWithColor(
                         drawableId = R.drawable.placeholder_drawable,
@@ -103,7 +128,8 @@ class LaunchersAdapter(
                                 resource: Drawable,
                                 transition: Transition<in Drawable>?
                             ) {
-                                super.onResourceReady(resource, transition)
+                                val badgedDrawable = applyNotificationBadge(resource, launcher.packageName)
+                                super.onResourceReady(badgedDrawable, transition)
                                 view.tag = true
                             }
                         })

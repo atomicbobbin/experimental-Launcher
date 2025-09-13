@@ -27,6 +27,14 @@ const val ICON_PACK_PACKAGE = "icon_pack_package"
 const val ICON_SHAPE_MODE = "icon_shape_mode" // 0 default, 1 circle, 2 rounded, 3 squircle
 const val PREDICTIVE_SUGGESTIONS_ENABLED = "predictive_suggestions_enabled"
 const val PREDICTIVE_SUGGESTIONS_COUNT = "predictive_suggestions_count"
+const val HOME_ICON_SIZE_SCALE = "home_icon_size_scale"
+const val DRAWER_ICON_SIZE_SCALE = "drawer_icon_size_scale"
+const val GRID_MARGIN_SIZE = "grid_margin_size"
+const val ENABLE_BLUR_EFFECTS = "enable_blur_effects"
+const val BLUR_INTENSITY = "blur_intensity"
+const val TRANSITION_EFFECT_MODE = "transition_effect_mode"
+const val ENABLE_NOTIFICATION_BADGES = "enable_notification_badges"
+const val NOTIFICATION_BADGE_STYLE = "notification_badge_style"
 
 // default home screen grid size
 const val ROW_COUNT = 6
@@ -49,3 +57,32 @@ const val ITEM_TYPE_FOLDER = 3
 
 const val WIDGET_HOST_ID = 12345
 const val MAX_CLICK_DURATION = 150
+
+// Icon size scale constants
+const val DEFAULT_ICON_SIZE_SCALE = 100 // 100% = default size
+const val MIN_ICON_SIZE_SCALE = 50      // 50% = minimum size
+const val MAX_ICON_SIZE_SCALE = 150     // 150% = maximum size
+
+// Grid margin constants  
+const val DEFAULT_GRID_MARGIN = 0       // 0 = default margin
+const val MIN_GRID_MARGIN = -10         // -10dp = tighter spacing
+const val MAX_GRID_MARGIN = 20          // +20dp = looser spacing
+
+// Blur constants
+const val DEFAULT_BLUR_INTENSITY = 15   // 15 = default blur radius
+const val MIN_BLUR_INTENSITY = 5        // 5 = minimum blur
+const val MAX_BLUR_INTENSITY = 30       // 30 = maximum blur
+
+// Transition effect constants
+const val TRANSITION_NONE = 0            // 0 = no enhanced effects
+const val TRANSITION_FADE = 1            // 1 = fade transition
+const val TRANSITION_SLIDE = 2           // 2 = slide transition  
+const val TRANSITION_ZOOM = 3            // 3 = zoom transition
+const val TRANSITION_FLIP = 4            // 4 = flip transition
+const val DEFAULT_TRANSITION_MODE = TRANSITION_SLIDE
+
+// Notification badge constants
+const val BADGE_STYLE_DOT = 0            // 0 = simple dot indicator
+const val BADGE_STYLE_COUNT = 1          // 1 = numeric count
+const val BADGE_STYLE_LARGE_DOT = 2      // 2 = larger dot indicator
+const val DEFAULT_BADGE_STYLE = BADGE_STYLE_DOT

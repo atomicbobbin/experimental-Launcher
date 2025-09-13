@@ -44,6 +44,38 @@ class SettingsRepository(context: Context) {
         get() = config.closeAppDrawer
         set(value) { config.closeAppDrawer = value }
 
+    var homeIconSizeScale: Int
+        get() = config.homeIconSizeScale
+        set(value) { config.homeIconSizeScale = value }
+
+    var drawerIconSizeScale: Int
+        get() = config.drawerIconSizeScale
+        set(value) { config.drawerIconSizeScale = value }
+
+    var gridMarginSize: Int
+        get() = config.gridMarginSize
+        set(value) { config.gridMarginSize = value }
+
+    var enableBlurEffects: Boolean
+        get() = config.enableBlurEffects
+        set(value) { config.enableBlurEffects = value }
+
+    var blurIntensity: Int
+        get() = config.blurIntensity
+        set(value) { config.blurIntensity = value }
+
+    var transitionEffectMode: Int
+        get() = config.transitionEffectMode
+        set(value) { config.transitionEffectMode = value }
+
+    var enableNotificationBadges: Boolean
+        get() = config.enableNotificationBadges
+        set(value) { config.enableNotificationBadges = value }
+
+    var notificationBadgeStyle: Int
+        get() = config.notificationBadgeStyle
+        set(value) { config.notificationBadgeStyle = value }
+
     fun applyCapabilityGating(capabilities: DeviceCapabilities) {
         _featureFlags = _featureFlags.copy(
             enableDynamicColor = capabilities.supportsDynamicColor,

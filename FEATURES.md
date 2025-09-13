@@ -22,12 +22,16 @@
   - Portrait orientation enforced on MainActivity
   - Lock Home screen layout toggle (prevents moves, renames, remove, resize)
   - Label controls: show/hide labels and adjust label size
+  - Icon size customization: adjustable scaling from 50% to 150% for home screen icons
+  - Grid margin customization: adjustable spacing from -10dp to +20dp for tighter/looser layouts
+  - Notification badges: optional badges showing unread notification counts (requires notification access)
 
 - **Folders**
   - Drag-to-create folders by dropping an icon onto another
   - Capacity up to 16 items; auto grid layout; composite circular folder icon preview
   - Animated open/close; drag in/out; maintain intra-folder order; auto-delete empty folders
   - Folder style presets: default, soft round, translucent
+  - Background blur/translucency effects for folders (Android 12+)
 
 - **Widgets & shortcuts**
   - Full AppWidget host with binding and optional configure flow
@@ -42,9 +46,12 @@
   - Sorting modes: Alphabetical, (scaffolded) Most used, Recently installed
   - Icon visuals: basic icon shape modes; icon pack selection (placeholder)
   - Label controls: show/hide labels and adjust label size
+  - Icon size customization: adjustable scaling from 50% to 150% for drawer icons
+  - Notification badges: optional badges showing unread notification counts (requires notification access)
   - Predictive suggestions (recency + frequency, pluggable predictors)
   - Unified search providers (apps, settings link, web search)
-  - Optional “close drawer on app launch” behavior
+  - Optional "close drawer on app launch" behavior
+  - Background blur/translucency effects for drawer background (Android 12+)
   - DB prepared for drawer tabs/groups (schema in place; UI pending)
 
 - **Gestures**
@@ -65,9 +72,12 @@
 
 - **Settings**
   - Color customization (opens Fossify Customization activity)
-  - Language controls: pre-Android 13 “Use English” toggle; Android 13+ launches system app-language picker
-  - Drawer: column count; show/hide search bar; auto-show keyboard; close drawer on app open
-  - Home screen: row count; column count
+  - Language controls: pre-Android 13 "Use English" toggle; Android 13+ launches system app-language picker
+  - Drawer: column count; show/hide search bar; auto-show keyboard; close drawer on app open; icon size scaling
+  - Home screen: row count; column count; icon size scaling; grid margin adjustment
+  - Visual effects: background blur/translucency toggle and intensity control (Android 12+)
+  - Transition effects: configurable page and drawer transitions (None, Fade, Slide, Zoom, Flip)
+  - Notification badges: optional toggle with multiple styles (Dot, Count, Large Dot) and permission management
   - Double-tap-to-lock toggle with device admin request UI and explanations
   - Backup and restore: export/import JSON (versioned; dry-run validation)
 
