@@ -8,14 +8,11 @@ import android.os.Bundle
 import org.fossify.commons.dialogs.RadioGroupDialog
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getProperPrimaryColor
-import org.fossify.commons.extensions.launchMoreAppsFromUsIntent
 import org.fossify.commons.extensions.updateTextColors
 import org.fossify.commons.extensions.viewBinding
 import org.fossify.commons.helpers.NavigationIcon
 import org.fossify.commons.helpers.isTiramisuPlus
-import org.fossify.commons.models.FAQItem
 import org.fossify.commons.models.RadioItem
-import org.fossify.home.BuildConfig
 import org.fossify.home.R
 import org.fossify.home.databinding.ActivitySettingsBinding
 import org.fossify.home.extensions.config
@@ -74,21 +71,11 @@ class SettingsActivity : SimpleActivity() {
     }
 
     private fun setupOptionsMenu() {
-        binding.settingsToolbar.setOnMenuItemClickListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.about -> launchAbout()
-                R.id.more_apps_from_us -> launchMoreAppsFromUsIntent()
-                else -> return@setOnMenuItemClickListener false
-            }
-            return@setOnMenuItemClickListener true
-        }
+        binding.settingsToolbar.setOnMenuItemClickListener { _ -> false }
     }
 
     private fun refreshMenuItems() {
-        binding.settingsToolbar.menu.apply {
-            findItem(R.id.more_apps_from_us).isVisible =
-                !resources.getBoolean(org.fossify.commons.R.bool.hide_google_relations)
-        }
+        // no-op: no menu items
     }
 
     private fun setupCustomizeColors() {
@@ -260,31 +247,5 @@ class SettingsActivity : SimpleActivity() {
         }
     }
 
-    private fun launchAbout() {
-        val licenses = 0L
-        val faqItems = ArrayList<FAQItem>()
-
-        if (!resources.getBoolean(org.fossify.commons.R.bool.hide_google_relations)) {
-            faqItems.add(
-                FAQItem(
-                    title = org.fossify.commons.R.string.faq_2_title_commons,
-                    text = org.fossify.commons.R.string.faq_2_text_commons
-                )
-            )
-            faqItems.add(
-                FAQItem(
-                    title = org.fossify.commons.R.string.faq_6_title_commons,
-                    text = org.fossify.commons.R.string.faq_6_text_commons
-                )
-            )
-        }
-
-        startAboutActivity(
-            appNameId = R.string.app_name,
-            licenseMask = licenses,
-            versionName = BuildConfig.VERSION_NAME,
-            faqItems = faqItems,
-            showFAQBeforeMail = true
-        )
-    }
+    // About screen removed for a blank, unbranded experience.
 }
