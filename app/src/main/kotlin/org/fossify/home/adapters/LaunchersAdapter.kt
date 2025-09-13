@@ -63,11 +63,18 @@ class LaunchersAdapter(
     }
 
     private fun calculateIconWidth() {
-        val currentColumnCount = activity.config.drawerColumnCount
-        val baseIconWidth = activity.realScreenSize.x / currentColumnCount
-        val scaleFactor = activity.config.drawerIconSizeScale / 100f
-        val iconWidth = (baseIconWidth * scaleFactor).toInt()
-        iconPadding = (iconWidth * 0.1f).toInt()
+        try {
+            val currentColumnCount = activity.config.drawerColumnCount
+            val baseIconWidth = activity.realScreenSize.x / currentColumnCount
+            val scaleFactor = activity.config.drawerIconSizeScale / 100f
+            val iconWidth = (baseIconWidth * scaleFactor).toInt()
+            iconPadding = (iconWidth * 0.1f).toInt()
+        } catch (e: Exception) {
+            // Fallback to default calculation
+            val currentColumnCount = activity.config.drawerColumnCount
+            val iconWidth = activity.realScreenSize.x / currentColumnCount
+            iconPadding = (iconWidth * 0.1f).toInt()
+        }
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -85,17 +92,26 @@ class LaunchersAdapter(
     }
 
     private fun applyNotificationBadge(drawable: Drawable, packageName: String): Drawable {
-        val badgeManager = org.fossify.home.notifications.BadgeManager(activity)
-        val settings = org.fossify.home.core.ServiceLocator.settingsRepository
-        
-        return if (settings.enableNotificationBadges) {
-            val badgeCount = badgeManager.getBadgeCount(packageName)
-            if (badgeCount > 0) {
-                badgeManager.createBadgedDrawable(drawable, packageName, badgeCount)
+        return try {
+            if (!org.fossify.home.core.ServiceLocator.isInitialized()) {
+                return drawable
+            }
+            
+            val settings = org.fossify.home.core.ServiceLocator.settingsRepository
+            
+            if (settings.enableNotificationBadges) {
+                val badgeCount = org.fossify.home.services.NotificationBadgeService.getNotificationCount(packageName)
+                if (badgeCount > 0) {
+                    val badgeManager = org.fossify.home.notifications.BadgeManager(activity)
+                    badgeManager.createBadgedDrawable(drawable, packageName, badgeCount)
+                } else {
+                    drawable
+                }
             } else {
                 drawable
             }
-        } else {
+        } catch (e: Exception) {
+            // Fallback to original drawable if badge system fails
             drawable
         }
     }

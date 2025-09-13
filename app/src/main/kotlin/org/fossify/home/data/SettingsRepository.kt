@@ -77,11 +77,15 @@ class SettingsRepository(context: Context) {
         set(value) { config.notificationBadgeStyle = value }
 
     fun applyCapabilityGating(capabilities: DeviceCapabilities) {
-        _featureFlags = _featureFlags.copy(
-            enableDynamicColor = capabilities.supportsDynamicColor,
-            enableThemedIcons = capabilities.supportsThemedIcons,
-            enableBlur = capabilities.supportsRenderEffectBlur,
-        )
+        try {
+            _featureFlags = _featureFlags.copy(
+                enableDynamicColor = capabilities.supportsDynamicColor,
+                enableThemedIcons = capabilities.supportsThemedIcons,
+                enableBlur = capabilities.supportsRenderEffectBlur,
+            )
+        } catch (e: Exception) {
+            android.util.Log.w("SettingsRepository", "Failed to apply capability gating", e)
+        }
     }
 }
 

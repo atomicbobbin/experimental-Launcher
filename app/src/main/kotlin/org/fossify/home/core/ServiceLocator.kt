@@ -46,22 +46,30 @@ object ServiceLocator {
         synchronized(this) {
             if (initialized) return
 
-            val appContext = context.applicationContext
-            deviceCapabilities = DeviceCapabilities(appContext)
-            settingsRepository = SettingsRepository(appContext)
-            themeManager = ThemeManager(appContext, deviceCapabilities, settingsRepository)
-            gestureRouter = GestureRouter()
-            searchRegistry = SearchRegistry(appContext)
-            // Register default providers
-            searchRegistry.register(AppsSearchProvider { iconResolver.loadAllLaunchers(emptySet()) })
-            searchRegistry.register(SettingsSearchProvider(appContext))
-            searchRegistry.register(WebSearchProvider(appContext))
-            iconResolver = IconResolver(appContext, deviceCapabilities, settingsRepository)
-            backupManager = BackupManager(appContext)
+            try {
+                val appContext = context.applicationContext
+                deviceCapabilities = DeviceCapabilities(appContext)
+                settingsRepository = SettingsRepository(appContext)
+                themeManager = ThemeManager(appContext, deviceCapabilities, settingsRepository)
+                gestureRouter = GestureRouter()
+                iconResolver = IconResolver(appContext, deviceCapabilities, settingsRepository)
+                searchRegistry = SearchRegistry(appContext)
+                // Register default providers (after iconResolver is initialized)
+                searchRegistry.register(AppsSearchProvider { iconResolver.loadAllLaunchers(emptySet()) })
+                searchRegistry.register(SettingsSearchProvider(appContext))
+                searchRegistry.register(WebSearchProvider(appContext))
+                backupManager = BackupManager(appContext)
 
-            initialized = true
+                initialized = true
+            } catch (e: Exception) {
+                // Log initialization error but don't crash the app
+                android.util.Log.e("ServiceLocator", "Failed to initialize ServiceLocator", e)
+                throw e
+            }
         }
     }
+
+    fun isInitialized(): Boolean = initialized
 }
 
 

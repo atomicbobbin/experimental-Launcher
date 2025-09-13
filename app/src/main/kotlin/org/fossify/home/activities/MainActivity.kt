@@ -158,6 +158,11 @@ class MainActivity : SimpleActivity(), FlingListener {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Ensure ServiceLocator is initialized
+        if (!org.fossify.home.core.ServiceLocator.isInitialized()) {
+            org.fossify.home.core.ServiceLocator.initialize(this)
+        }
+        
         useDynamicTheme = config.useDynamicColors
 
         super.onCreate(savedInstanceState)

@@ -153,16 +153,26 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     var itemLongClickListener: ((HomeScreenGridItem) -> Unit)? = null
 
     private fun calculateIconMargin(): Int {
-        val config = context.config
-        val baseMargin = (baseIconMargin * 5 / columnCount).toInt()
-        return baseMargin + config.gridMarginSize
+        return try {
+            val config = context.config
+            val baseMargin = (baseIconMargin * 5 / columnCount).toInt()
+            baseMargin + config.gridMarginSize
+        } catch (e: Exception) {
+            // Fallback to default margin calculation
+            (baseIconMargin * 5 / columnCount).toInt()
+        }
     }
 
     private fun calculateIconSize(cellWidth: Int, cellHeight: Int): Int {
-        val config = context.config
-        val baseSize = min(cellWidth, cellHeight) - 2 * iconMargin
-        val scaleFactor = config.homeIconSizeScale / 100f
-        return (baseSize * scaleFactor).toInt()
+        return try {
+            val config = context.config
+            val baseSize = min(cellWidth, cellHeight) - 2 * iconMargin
+            val scaleFactor = config.homeIconSizeScale / 100f
+            (baseSize * scaleFactor).toInt()
+        } catch (e: Exception) {
+            // Fallback to default size calculation
+            min(cellWidth, cellHeight) - 2 * iconMargin
+        }
     }
 
     init {
@@ -1996,18 +2006,28 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
             }
 
             // Apply notification badge if enabled and available
-            val badgeManager = org.fossify.home.notifications.BadgeManager(context)
-            val settings = org.fossify.home.core.ServiceLocator.settingsRepository
-            
-            if (settings.enableNotificationBadges && item.type == ITEM_TYPE_ICON) {
-                val badgeCount = badgeManager.getBadgeCount(item.packageName)
-                if (badgeCount > 0 && drawable != null) {
-                    val badgedDrawable = badgeManager.createBadgedDrawable(drawable, item.packageName, badgeCount)
-                    badgedDrawable.draw(this)
+            try {
+                if (!org.fossify.home.core.ServiceLocator.isInitialized()) {
+                    drawable?.draw(this)
+                } else {
+                
+                val settings = org.fossify.home.core.ServiceLocator.settingsRepository
+                
+                if (settings.enableNotificationBadges && item.type == ITEM_TYPE_ICON) {
+                    val badgeCount = org.fossify.home.services.NotificationBadgeService.getNotificationCount(item.packageName)
+                    if (badgeCount > 0 && drawable != null) {
+                        val badgeManager = org.fossify.home.notifications.BadgeManager(context)
+                        val badgedDrawable = badgeManager.createBadgedDrawable(drawable, item.packageName, badgeCount)
+                        badgedDrawable.draw(this)
+                    } else {
+                        drawable?.draw(this)
+                    }
                 } else {
                     drawable?.draw(this)
                 }
-            } else {
+                }
+            } catch (e: Exception) {
+                // Fallback to drawing original drawable if badge system fails
                 drawable?.draw(this)
             }
         }
