@@ -24,6 +24,7 @@ This file lists features present in Smart Launcher, Samsung One UI Home, Pixel L
 - [f011] App drawer layout variants (vertical/horizontal/list) and background customization
 - [f012] Toggle between App Drawer mode and Home‑only mode
 - [f037] Rename app labels
+- [f041] Smart Launcher-Style Settings Restructure (card-based dashboard with categories)
 
 **Medium Priority - Advanced Interactions**
 - [f013] Deeper gesture customization (map multiple gestures to actions)
@@ -52,13 +53,14 @@ This file lists features present in Smart Launcher, Samsung One UI Home, Pixel L
 ### Remaining Features by Launcher
 
 **Smart Launcher**
-1. [f013] Deeper gesture customization (map multiple gestures to actions)
-2. [f003] Icon pack support
-3. [f004] Adaptive icon shape controls
-4. [f029] Biometric/PIN protection for hidden/locked apps
-5. [f032] Automatic app categorization in the App Drawer (smart categories)
-6. [f022] Popup widgets attached to app icons
-7. [f024] Contextual "Smart Page" with clock/weather and suggestions
+1. [f041] Smart Launcher-Style Settings Restructure (card-based dashboard with categories)
+2. [f013] Deeper gesture customization (map multiple gestures to actions)
+3. [f003] Icon pack support
+4. [f004] Adaptive icon shape controls
+5. [f029] Biometric/PIN protection for hidden/locked apps
+6. [f032] Automatic app categorization in the App Drawer (smart categories)
+7. [f022] Popup widgets attached to app icons
+8. [f024] Contextual "Smart Page" with clock/weather and suggestions
 
 **Samsung One UI Home**
 1. [f027] Home screen landscape rotation support
@@ -89,6 +91,10 @@ This file lists features present in Smart Launcher, Samsung One UI Home, Pixel L
 ### Implementation Risks & Solutions
 
 **High Priority Features**
+- **Smart Launcher-Style Settings Restructure [f041]**
+  - Risk: Major UI/UX overhaul of existing settings; potential user confusion during transition; maintaining backward compatibility with current settings.
+  - Solution: Implement card-based dashboard with logical categories; create modular settings activities; add live preview components; provide migration path from current settings; maintain fallback to current interface during development.
+
 - **Icon pack support [f003]**
   - Risk: Parsing diverse third-party icon pack formats; runtime performance and memory overhead for icon bitmaps.
   - Solution: Use a well-maintained icon pack parsing library; cache rasterized icons with versioned keys; provide a "Reset icons" tool; do work off the main thread.
@@ -127,28 +133,29 @@ This file lists features present in Smart Launcher, Samsung One UI Home, Pixel L
 3. Rename app labels [f037] (basic user customization)
 
 **Phase 2: User Experience (Medium Impact)**
-4. Drawer tabs/groups [f010] (organize apps into categories)
-5. App drawer layout variants [f011] (vertical/horizontal/list layouts)
-6. Toggle between App Drawer and Home‑only modes [f012] (workflow flexibility)
+4. Smart Launcher-Style Settings Restructure [f041] (card-based dashboard with live previews)
+5. Drawer tabs/groups [f010] (organize apps into categories)
+6. App drawer layout variants [f011] (vertical/horizontal/list layouts)
+7. Toggle between App Drawer and Home‑only modes [f012] (workflow flexibility)
 
 **Phase 3: Advanced Interactions (Medium Impact)**
-7. Deeper gesture customization [f013] (advanced user control)
-8. Per‑icon and per‑folder swipe actions [f014] (efficiency shortcuts)
-9. Pull‑down gesture for notifications/quick settings [f015] (system integration)
-10. Popup widgets attached to app icons [f022] (quick access widgets)
+8. Deeper gesture customization [f013] (advanced user control)
+9. Per‑icon and per‑folder swipe actions [f014] (efficiency shortcuts)
+10. Pull‑down gesture for notifications/quick settings [f015] (system integration)
+11. Popup widgets attached to app icons [f022] (quick access widgets)
 
 **Phase 4: Smart Features (Lower Impact)**
-11. "At a Glance"/Smart Page [f024] (contextual information)
-12. Widget picker search and suggested widgets [f021] (enhanced widget discovery)
-13. Automatic app categorization [f032] (intelligent organization)
-14. Third‑party deep search integration [f020] (advanced search)
+12. "At a Glance"/Smart Page [f024] (contextual information)
+13. Widget picker search and suggested widgets [f021] (enhanced widget discovery)
+14. Automatic app categorization [f032] (intelligent organization)
+15. Third‑party deep search integration [f020] (advanced search)
 
 **Phase 5: Advanced Layout & Enterprise (Specialized)**
-15. Stackable widgets [f023] (advanced widget management)
-16. Subgrid positioning and free placement [f026] (precise layout control)
-17. Home screen landscape rotation support [f027] (orientation flexibility)
-18. Work profile tab/badging [f036] (enterprise features)
-19. App Pairs [f030] (multitasking enhancement)
+16. Stackable widgets [f023] (advanced widget management)
+17. Subgrid positioning and free placement [f026] (precise layout control)
+18. Home screen landscape rotation support [f027] (orientation flexibility)
+19. Work profile tab/badging [f036] (enterprise features)
+20. App Pairs [f030] (multitasking enhancement)
 
 **Out of Scope / Plugin Territory**
 - Google Discover feed [f025] (requires Google services)

@@ -1222,7 +1222,11 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     }
 
     private fun calculateWidgetPos(topLeft: Point): Point {
-        val cell = cells[topLeft]!!
+        val cell = cells[topLeft] ?: run {
+            // Ensure cell sizes are initialized before accessing
+            fillCellSizes()
+            cells[topLeft]
+        } ?: return Point(sideMargins.left, sideMargins.top)
         return Point(
             cell.left + sideMargins.left,
             cell.top + sideMargins.top
@@ -1238,7 +1242,9 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         post {
             setWillNotDraw(false)
             invalidate()
-            binding.drawingArea.invalidate()
+            if (this::binding.isInitialized) {
+                binding.drawingArea.invalidate()
+            }
         }
     }
 
