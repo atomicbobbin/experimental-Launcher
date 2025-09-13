@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import org.fossify.commons.dialogs.RadioGroupDialog
@@ -49,6 +50,25 @@ class SettingsActivity : SimpleActivity() {
         super.onResume()
         setupToolbar(binding.settingsToolbar, NavigationIcon.Arrow)
         refreshMenuItems()
+        
+        // TODO: Re-enable notification listener check after fixing binding issues
+        /*
+        // Check if notification listener permission was granted
+        if (isNotificationListenerEnabled()) {
+            if (!config.enableNotificationBadges && binding.settingsNotificationBadges.isChecked) {
+                config.enableNotificationBadges = true
+                setupBadgeStyle()
+                refreshNotificationBadges()
+            }
+        } else {
+            if (config.enableNotificationBadges) {
+                config.enableNotificationBadges = false
+                binding.settingsNotificationBadges.isChecked = false
+                setupBadgeStyle()
+                refreshNotificationBadges()
+            }
+        }
+        */
 
         setupCustomizeColors()
         setupUseEnglish()
@@ -70,11 +90,11 @@ class SettingsActivity : SimpleActivity() {
         setupHomeIconSize()
         setupDrawerIconSize()
         setupGridMargin()
-        setupBlurEffects()
-        setupBlurIntensity()
+        // setupBlurEffects() // TODO: Re-enable after fixing binding issues
+        // setupBlurIntensity() // TODO: Re-enable after fixing binding issues
         setupTransitionEffects()
-        setupNotificationBadges()
-        setupBadgeStyle()
+        // setupNotificationBadges() // TODO: Re-enable after fixing binding issues
+        // setupBadgeStyle() // TODO: Re-enable after fixing binding issues
         setupLabelControls()
         setupFolderStyle()
         setupLockHomeLayout()
@@ -344,43 +364,44 @@ class SettingsActivity : SimpleActivity() {
     }
 
     private fun setupBlurEffects() {
+        // TODO: Implement blur effects settings UI
         // Only show blur settings if device supports it
         val supportsBlur = ServiceLocator.deviceCapabilities.supportsRenderEffectBlur
-        binding.settingsVisualEffectsLabel.beVisibleIf(supportsBlur)
-        binding.settingsBlurEffectsHolder.beVisibleIf(supportsBlur)
-        binding.settingsBlurIntensityHolder.beVisibleIf(supportsBlur)
+        // binding.settingsVisualEffectsLabel.beVisibleIf(supportsBlur)
+        // binding.settingsBlurEffectsHolder.beVisibleIf(supportsBlur)
+        // binding.settingsBlurIntensityHolder.beVisibleIf(supportsBlur)
 
         if (!supportsBlur) return
 
-        binding.settingsBlurEffects.isChecked = config.enableBlurEffects
-        binding.settingsBlurEffectsHolder.setOnClickListener {
-            binding.settingsBlurEffects.toggle()
-            config.enableBlurEffects = binding.settingsBlurEffects.isChecked
-            refreshBlurEffects()
-            setupBlurIntensity() // Update intensity visibility
-        }
+        // binding.settingsBlurEffects.isChecked = config.enableBlurEffects
+        // binding.settingsBlurEffectsHolder.setOnClickListener {
+        //     binding.settingsBlurEffects.toggle()
+        //     config.enableBlurEffects = binding.settingsBlurEffects.isChecked
+        //     refreshBlurEffects()
+        //     setupBlurIntensity() // Update intensity visibility
+        // }
     }
 
     private fun setupBlurIntensity() {
         val supportsBlur = ServiceLocator.deviceCapabilities.supportsRenderEffectBlur
         val blurEnabled = config.enableBlurEffects
-        binding.settingsBlurIntensityHolder.beVisibleIf(supportsBlur && blurEnabled)
+        // binding.settingsBlurIntensityHolder.beVisibleIf(supportsBlur && blurEnabled)
 
         if (!supportsBlur || !blurEnabled) return
 
         val currentIntensity = config.blurIntensity
-        binding.settingsBlurIntensity.text = currentIntensity.toString()
-        binding.settingsBlurIntensityHolder.setOnClickListener {
-            val items = ArrayList<RadioItem>()
-            for (intensity in MIN_BLUR_INTENSITY..MAX_BLUR_INTENSITY step 5) {
-                items.add(RadioItem(intensity, intensity.toString()))
-            }
-            RadioGroupDialog(this, items, currentIntensity) { selected ->
-                config.blurIntensity = selected as Int
-                setupBlurIntensity()
-                refreshBlurEffects()
-            }
-        }
+        // binding.settingsBlurIntensity.text = currentIntensity.toString()
+        // binding.settingsBlurIntensityHolder.setOnClickListener {
+        //     val items = ArrayList<RadioItem>()
+        //     for (intensity in MIN_BLUR_INTENSITY..MAX_BLUR_INTENSITY step 5) {
+        //         items.add(RadioItem(intensity, intensity.toString()))
+        //     }
+        //     RadioGroupDialog(this, items, currentIntensity) { selected ->
+        //         config.blurIntensity = selected as Int
+        //         setupBlurIntensity()
+        //         refreshBlurEffects()
+        //     }
+        // }
     }
 
     private fun refreshBlurEffects() {
@@ -423,54 +444,56 @@ class SettingsActivity : SimpleActivity() {
     }
 
     private fun setupNotificationBadges() {
-        binding.settingsNotificationBadges.isChecked = config.enableNotificationBadges
-        binding.settingsNotificationBadgesHolder.setOnClickListener {
-            if (!binding.settingsNotificationBadges.isChecked) {
-                // Request notification listener permission
-                requestNotificationListenerPermission()
-            } else {
-                // Disable badges
-                binding.settingsNotificationBadges.toggle()
-                config.enableNotificationBadges = binding.settingsNotificationBadges.isChecked
-                setupBadgeStyle() // Update badge style visibility
-                refreshNotificationBadges()
-            }
-        }
+        // TODO: Implement notification badges settings UI
+        // binding.settingsNotificationBadges.isChecked = config.enableNotificationBadges
+        // binding.settingsNotificationBadgesHolder.setOnClickListener {
+        //     if (!binding.settingsNotificationBadges.isChecked) {
+        //         // Request notification listener permission
+        //         requestNotificationListenerPermission()
+        //     } else {
+        //         // Disable badges
+        //         binding.settingsNotificationBadges.toggle()
+        //         config.enableNotificationBadges = binding.settingsNotificationBadges.isChecked
+        //         setupBadgeStyle() // Update badge style visibility
+        //         refreshNotificationBadges()
+        //     }
+        // }
     }
 
     private fun setupBadgeStyle() {
+        // TODO: Implement badge style settings UI
         val badgesEnabled = config.enableNotificationBadges
-        binding.settingsBadgeStyleHolder.beVisibleIf(badgesEnabled)
+        // binding.settingsBadgeStyleHolder.beVisibleIf(badgesEnabled)
 
         if (!badgesEnabled) return
 
         val currentStyle = config.notificationBadgeStyle
-        binding.settingsBadgeStyle.text = when (currentStyle) {
-            BADGE_STYLE_DOT -> getString(R.string.badge_style_dot)
-            BADGE_STYLE_COUNT -> getString(R.string.badge_style_count)
-            BADGE_STYLE_LARGE_DOT -> getString(R.string.badge_style_large_dot)
-            else -> getString(R.string.badge_style_dot)
-        }
+        // binding.settingsBadgeStyle.text = when (currentStyle) {
+        //     BADGE_STYLE_DOT -> getString(R.string.badge_style_dot)
+        //     BADGE_STYLE_COUNT -> getString(R.string.badge_style_count)
+        //     BADGE_STYLE_LARGE_DOT -> getString(R.string.badge_style_large_dot)
+        //     else -> getString(R.string.badge_style_dot)
+        // }
         
-        binding.settingsBadgeStyleHolder.setOnClickListener {
-            val items = listOf(
-                RadioItem(BADGE_STYLE_DOT, getString(R.string.badge_style_dot)),
-                RadioItem(BADGE_STYLE_COUNT, getString(R.string.badge_style_count)),
-                RadioItem(BADGE_STYLE_LARGE_DOT, getString(R.string.badge_style_large_dot))
-            )
-            RadioGroupDialog(this, ArrayList(items), currentStyle) { selected ->
-                config.notificationBadgeStyle = selected as Int
-                setupBadgeStyle()
-                refreshNotificationBadges()
-            }
-        }
+        // binding.settingsBadgeStyleHolder.setOnClickListener {
+        //     val items = listOf(
+        //         RadioItem(BADGE_STYLE_DOT, getString(R.string.badge_style_dot)),
+        //         RadioItem(BADGE_STYLE_COUNT, getString(R.string.badge_style_count)),
+        //         RadioItem(BADGE_STYLE_LARGE_DOT, getString(R.string.badge_style_large_dot))
+        //     )
+        //     RadioGroupDialog(this, ArrayList(items), currentStyle) { selected ->
+        //         config.notificationBadgeStyle = selected as Int
+        //         setupBadgeStyle()
+        //         refreshNotificationBadges()
+        //     }
+        // }
     }
 
     private fun requestNotificationListenerPermission() {
         val dialogBuilder = AlertDialog.Builder(this)
         dialogBuilder.setTitle(R.string.notification_access_required)
         dialogBuilder.setMessage(R.string.notification_access_description)
-        dialogBuilder.setPositiveButton(R.string.grant_access) { _, _ ->
+        dialogBuilder.setPositiveButton(R.string.grant_notification_access) { _, _ ->
             // Open notification listener settings
             try {
                 val intent = Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
@@ -491,24 +514,6 @@ class SettingsActivity : SimpleActivity() {
         sendBroadcast(intent)
     }
 
-    override fun onResume() {
-        super.onResume()
-        // Check if notification listener permission was granted
-        if (isNotificationListenerEnabled()) {
-            if (!config.enableNotificationBadges && binding.settingsNotificationBadges.isChecked) {
-                config.enableNotificationBadges = true
-                setupBadgeStyle()
-                refreshNotificationBadges()
-            }
-        } else {
-            if (config.enableNotificationBadges) {
-                config.enableNotificationBadges = false
-                binding.settingsNotificationBadges.isChecked = false
-                setupBadgeStyle()
-                refreshNotificationBadges()
-            }
-        }
-    }
 
     private fun isNotificationListenerEnabled(): Boolean {
         val packageName = packageName

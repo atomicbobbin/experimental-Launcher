@@ -47,6 +47,7 @@ import org.fossify.commons.extensions.beGone
 import org.fossify.commons.extensions.beVisible
 import org.fossify.commons.extensions.getContrastColor
 import org.fossify.commons.extensions.getProperBackgroundColor
+import org.fossify.commons.extensions.toast
 import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.navigationBarHeight
 import org.fossify.commons.extensions.performHapticFeedback

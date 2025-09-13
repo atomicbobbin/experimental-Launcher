@@ -653,15 +653,13 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/ripple_background">
 
-                <org.fossify.commons.views.MySwitchCompat
+                <org.fossify.commons.views.MyMaterialSwitch
                     android:id="@+id/settings_blur_effects"
+                    style="@style/SettingsSwitchStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:layout_marginStart="@dimen/medium_margin"
-                    android:background="@null"
-                    android:clickable="false" />
+                    android:layout_centerVertical="true" />
 
                 <org.fossify.commons.views.MyTextView
                     android:id="@+id/settings_blur_effects_label"
@@ -730,15 +728,13 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/ripple_background">
 
-                <org.fossify.commons.views.MySwitchCompat
+                <org.fossify.commons.views.MyMaterialSwitch
                     android:id="@+id/settings_notification_badges"
+                    style="@style/SettingsSwitchStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:layout_marginStart="@dimen/medium_margin"
-                    android:background="@null"
-                    android:clickable="false" />
+                    android:layout_centerVertical="true" />
 
                 <org.fossify.commons.views.MyTextView
                     android:id="@+id/settings_notification_badges_label"

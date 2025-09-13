@@ -65,7 +65,7 @@ class BadgeManager(private val context: Context) {
         originalDrawables[packageName] = originalDrawable
 
         val iconSize = originalDrawable.intrinsicWidth.coerceAtLeast(originalDrawable.intrinsicHeight)
-        val badgedBitmap = createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888)
+        val badgedBitmap = Bitmap.createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(badgedBitmap)
 
         // Draw original icon

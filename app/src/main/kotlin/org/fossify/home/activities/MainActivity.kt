@@ -102,6 +102,7 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.IntentFilter
 
 class MainActivity : SimpleActivity(), FlingListener {
@@ -134,7 +135,7 @@ class MainActivity : SimpleActivity(), FlingListener {
                     binding.homeScreenGrid.root.refreshIconSettings()
                 }
                 "org.fossify.home.REFRESH_DRAWER" -> {
-                    binding.allAppsFragment.refreshIconSettings()
+                    binding.allAppsFragment.root.refreshIconSettings()
                 }
                 "org.fossify.home.REFRESH_BLUR" -> {
                     refreshBlurEffects()
@@ -215,14 +216,14 @@ class MainActivity : SimpleActivity(), FlingListener {
 
     private fun refreshBlurEffects() {
         // Apply blur to folder backgrounds and app drawer
-        binding.allAppsFragment.refreshBlurEffects()
+        binding.allAppsFragment.root.refreshBlurEffects()
         binding.homeScreenGrid.root.refreshBlurEffects()
     }
 
     private fun refreshNotificationBadges() {
         // Refresh notification badges on home screen and drawer
         binding.homeScreenGrid.root.refreshNotificationBadges()
-        binding.allAppsFragment.refreshNotificationBadges()
+        binding.allAppsFragment.root.refreshNotificationBadges()
     }
 
     override fun onDestroy() {

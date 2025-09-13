@@ -25,6 +25,8 @@ abstract class ItemMenuListenerAdapter : ItemMenuListener {
     override fun appInfo(gridItem: HomeScreenGridItem) = Unit
     override fun remove(gridItem: HomeScreenGridItem) = Unit
     override fun uninstall(gridItem: HomeScreenGridItem) = Unit
+    override fun popupWidget(gridItem: HomeScreenGridItem) = Unit
+    override fun setSwipeAction(gridItem: HomeScreenGridItem) = Unit
     override fun onDismiss() = Unit
     override fun beforeShow(menu: Menu) = Unit
 }
