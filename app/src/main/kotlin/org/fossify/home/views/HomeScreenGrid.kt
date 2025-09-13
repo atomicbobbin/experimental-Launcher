@@ -239,6 +239,9 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     override fun onFinishInflate() {
         super.onFinishInflate()
         binding = HomeScreenGridBinding.bind(this)
+        
+        // Make the grid background transparent so wallpaper shows through
+        setBackgroundColor(android.graphics.Color.TRANSPARENT)
     }
 
     fun fetchGridItems() {
@@ -1885,6 +1888,13 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         // Apply blur effects to the grid background when folders are opened
         currentlyOpenFolder?.let { folder ->
             org.fossify.home.effects.BlurUtils.applyFolderBlur(this)
+        }
+    }
+
+    fun refreshWallpaper() {
+        // Refresh wallpaper in the drawing area
+        if (this::binding.isInitialized) {
+            binding.drawingArea.refreshWallpaper()
         }
     }
 

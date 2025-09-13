@@ -80,7 +80,7 @@ class SettingsRepository(context: Context) {
         try {
             _featureFlags = _featureFlags.copy(
                 enableDynamicColor = capabilities.supportsDynamicColor,
-                enableThemedIcons = capabilities.supportsThemedIcons,
+                enableThemedIcons = false, // Keep themed icons disabled to show original icons
                 enableBlur = capabilities.supportsRenderEffectBlur,
             )
         } catch (e: Exception) {

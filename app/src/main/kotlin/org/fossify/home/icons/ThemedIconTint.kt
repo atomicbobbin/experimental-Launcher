@@ -12,11 +12,17 @@ object ThemedIconTint {
     fun applyIfSupported(context: Context, drawable: Drawable, settings: SettingsRepository): Drawable {
         if (!settings.featureFlags.enableThemedIcons) return drawable
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return drawable
-        val wrap = DrawableCompat.wrap(drawable.mutate())
-        val color = MaterialColors.getColor(context, com.google.android.material.R.attr.colorPrimary, 0)
-        DrawableCompat.setTintMode(wrap, PorterDuff.Mode.SRC_IN)
-        DrawableCompat.setTint(wrap, color)
-        return wrap
+        
+        try {
+            val wrap = DrawableCompat.wrap(drawable.mutate())
+            val color = MaterialColors.getColor(context, com.google.android.material.R.attr.colorPrimary, 0xFF2E7D32.toInt())
+            DrawableCompat.setTintMode(wrap, PorterDuff.Mode.SRC_IN)
+            DrawableCompat.setTint(wrap, color)
+            return wrap
+        } catch (e: Exception) {
+            // If themed icon tinting fails, return original drawable
+            return drawable
+        }
     }
 }
 

@@ -146,6 +146,9 @@ class MainActivity : SimpleActivity(), FlingListener {
                 "org.fossify.home.REFRESH_BADGES" -> {
                     refreshNotificationBadges()
                 }
+                "org.fossify.home.REFRESH_WALLPAPER" -> {
+                    binding.homeScreenGrid.root.refreshWallpaper()
+                }
             }
         }
     }
@@ -167,6 +170,10 @@ class MainActivity : SimpleActivity(), FlingListener {
 
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+        
+        // Make the main layout transparent so wallpaper shows through
+        binding.root.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+        
         appLaunched(BuildConfig.APPLICATION_ID)
 
         mDetector = GestureDetectorCompat(this, MyGestureListener(this))
@@ -215,8 +222,9 @@ class MainActivity : SimpleActivity(), FlingListener {
             addAction("org.fossify.home.REFRESH_BLUR")
             addAction("org.fossify.home.REFRESH_TRANSITIONS")
             addAction("org.fossify.home.REFRESH_BADGES")
+            addAction("org.fossify.home.REFRESH_WALLPAPER")
         }
-        registerReceiver(settingsReceiver, filter)
+        registerReceiver(settingsReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
     }
 
     private fun refreshBlurEffects() {
