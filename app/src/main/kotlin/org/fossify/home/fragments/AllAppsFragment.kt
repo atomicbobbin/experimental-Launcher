@@ -23,6 +23,7 @@ import org.fossify.commons.helpers.isRPlus
 import org.fossify.commons.views.MyGridLayoutManager
 import org.fossify.home.activities.MainActivity
 import org.fossify.home.adapters.LaunchersAdapter
+import org.fossify.home.adapters.SuggestionsAdapter
 import org.fossify.home.databinding.AllAppsFragmentBinding
 import org.fossify.home.extensions.config
 import org.fossify.home.extensions.launchApp
@@ -31,6 +32,10 @@ import org.fossify.home.helpers.ITEM_TYPE_ICON
 import org.fossify.home.interfaces.AllAppsListener
 import org.fossify.home.models.AppLauncher
 import org.fossify.home.models.HomeScreenGridItem
+import org.fossify.home.predict.PredictorsRegistry
+import org.fossify.home.predict.UsageTracker
+import org.fossify.home.sort.AppSortMode
+import org.fossify.home.sort.AppSortRegistry
 
 class AllAppsFragment(
     context: Context,
@@ -42,6 +47,9 @@ class AllAppsFragment(
     var ignoreTouches = false
 
     private var launchers = emptyList<AppLauncher>()
+    private val tracker by lazy { UsageTracker(context) }
+    private val predictors by lazy { PredictorsRegistry(context, tracker) }
+    private val sortRegistry by lazy { AppSortRegistry(context) }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun setupFragment(activity: MainActivity) {
@@ -129,13 +137,12 @@ class AllAppsFragment(
     }
 
     fun gotLaunchers(appLaunchers: List<AppLauncher>) {
-        launchers = appLaunchers.sortedWith(
-            compareBy(
-                { it.title.normalizeString().lowercase() },
-                { it.packageName }
-            )
-        )
-
+        val mode = when (context.config.drawerSortMode) {
+            1 -> AppSortMode.MostUsed
+            2 -> AppSortMode.RecentlyInstalled
+            else -> AppSortMode.Alphabetical
+        }
+        launchers = sortRegistry.sort(mode, appLaunchers)
         setupAdapter(launchers)
     }
 
@@ -162,6 +169,22 @@ class AllAppsFragment(
             }
 
             adapter.submitList(launchers.toMutableList())
+
+            // Suggestions row
+            val suggestionsEnabled = context.config.predictiveSuggestionsEnabled
+            binding.suggestionsRow.visibility = if (suggestionsEnabled) View.VISIBLE else View.GONE
+            if (suggestionsEnabled) {
+                val count = context.config.predictiveSuggestionsCount
+                val suggestions = predictors.getSuggestions(launchers, count)
+                val sugAdapter = binding.suggestionsRow.adapter as? SuggestionsAdapter
+                    ?: SuggestionsAdapter(activity!!) {
+                        activity?.launchApp(it.packageName, it.activityName)
+                    }.also {
+                        binding.suggestionsRow.adapter = it
+                    }
+                (binding.suggestionsRow.layoutManager as MyGridLayoutManager).spanCount = count
+                sugAdapter.submitList(suggestions)
+            }
         }
     }
 
@@ -240,11 +263,10 @@ class AllAppsFragment(
         binding.searchBar.setupMenu()
 
         binding.searchBar.onSearchTextChangedListener = { query ->
-            val filtered =
-                launchers.filter { query.isEmpty() || it.title.contains(query, ignoreCase = true) }
-            getAdapter()?.submitList(filtered) {
-                showNoResultsPlaceholderIfNeeded()
-            }
+            // Filter current list
+            val filtered = launchers.filter { query.isEmpty() || it.title.contains(query, ignoreCase = true) }
+            getAdapter()?.submitList(filtered) { showNoResultsPlaceholderIfNeeded() }
+            // TODO [f011]: Also surface provider results list UI here (apps/settings/web)
         }
     }
 

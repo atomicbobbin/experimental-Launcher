@@ -29,6 +29,15 @@
 
     </com.qtalk.recyclerviewfastscroller.RecyclerViewFastScroller>
 
+    <org.fossify.commons.views.MyRecyclerView
+        android:id="@+id/suggestions_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/search_bar"
+        android:visibility="gone"
+        app:layoutManager="org.fossify.commons.views.MyGridLayoutManager"
+        app:spanCount="4" />
+
     <org.fossify.commons.views.MyTextView
         android:id="@+id/no_results_placeholder"
         android:layout_width="match_parent"

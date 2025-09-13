@@ -22,6 +22,14 @@
             android:icon="@drawable/ic_cross_vector"
             android:title="@string/remove" />
         <item
+            android:id="@+id/popup_widget"
+            android:icon="@drawable/ic_widget"
+            android:title="@string/popup_widget" />
+        <item
+            android:id="@+id/set_swipe_action"
+            android:icon="@drawable/ic_gesture"
+            android:title="@string/set_swipe_action" />
+        <item
             android:id="@+id/uninstall"
             android:icon="@drawable/ic_delete_vector"
             android:title="@string/uninstall" />

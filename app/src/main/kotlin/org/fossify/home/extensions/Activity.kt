@@ -54,6 +54,10 @@ fun Activity.launchApp(packageName: String, activityName: String) {
             showErrorToast(e)
         }
     }
+    try {
+        val tracker = org.fossify.home.predict.UsageTracker(this)
+        tracker.recordLaunch("$packageName/$activityName")
+    } catch (_: Exception) { }
 }
 
 fun Activity.launchAppInfo(packageName: String) {

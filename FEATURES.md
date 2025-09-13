@@ -6,18 +6,28 @@
   - Default HOME launcher (handles MAIN + HOME; `singleTask`; excluded from recents)
   - Privacy-first: no network access, no ads, no tracking
   - Key permissions: `QUERY_ALL_PACKAGES` (enumerate launchables), `BIND_APPWIDGET` (widgets), `REQUEST_DELETE_PACKAGES` (uninstall), `EXPAND_STATUS_BAR` (expand shade), device admin for force-lock
+  - Foundational architecture: ServiceLocator, DeviceCapabilities gating, SettingsRepository
+  - Theme tokens scaffold with dynamic color fallback (ThemeManager)
+  - Dynamic colors (Material You) toggle; themed icon tinting support (Android 13+)
+  - Centralized GestureRouter for future gesture mapping
+  - Modular SearchRegistry scaffold for provider-based search
+  - BackupManager scaffold for versioned JSON export/import (dry-run)
 
 - **Home screen**
   - Configurable grid size: rows 2–15, columns 2–15; live reflow and redraw
   - Multi-page desktop: horizontal swipe, animated page indicators, auto-delete empty pages
-  - Bottom dock row (last grid row); items marked as docked stick to bottom across pages
+  - Bottom dock row (last grid row); items marked as docked stick to bottom across pages; dock paging
   - First-run dock auto-population (if available): dialer, SMS, browser, store (Play/F-Droid/Aurora), camera
+  - (Optional) Auto-add newly installed apps to Home
   - Portrait orientation enforced on MainActivity
+  - Lock Home screen layout toggle (prevents moves, renames, remove, resize)
+  - Label controls: show/hide labels and adjust label size
 
 - **Folders**
   - Drag-to-create folders by dropping an icon onto another
   - Capacity up to 16 items; auto grid layout; composite circular folder icon preview
   - Animated open/close; drag in/out; maintain intra-folder order; auto-delete empty folders
+  - Folder style presets: default, soft round, translucent
 
 - **Widgets & shortcuts**
   - Full AppWidget host with binding and optional configure flow
@@ -29,8 +39,13 @@
   - Grid with configurable column count (independent of desktop)
   - Fast scroller with index bubble; smooth animations; no item animator for performance
   - Search bar (toggleable); live filtering by title; optional auto-show keyboard on open
-  - Alphabetical sorting with locale normalization; deterministic tiebreak by package name
+  - Sorting modes: Alphabetical, (scaffolded) Most used, Recently installed
+  - Icon visuals: basic icon shape modes; icon pack selection (placeholder)
+  - Label controls: show/hide labels and adjust label size
+  - Predictive suggestions (recency + frequency, pluggable predictors)
+  - Unified search providers (apps, settings link, web search)
   - Optional “close drawer on app launch” behavior
+  - DB prepared for drawer tabs/groups (schema in place; UI pending)
 
 - **Gestures**
   - Fling up: open App Drawer
@@ -41,6 +56,7 @@
 - **Context menus (long-press)**
   - App icons (home): Rename, Remove, Uninstall, App info, dynamic app shortcuts submenu
   - App icons (drawer): Hide icon, dynamic app shortcuts submenu
+  - Popup widget (scaffold) and per-icon swipe action (scaffold)
   - Widgets: Resize, Remove
 
 - **Hidden apps**
@@ -53,6 +69,7 @@
   - Drawer: column count; show/hide search bar; auto-show keyboard; close drawer on app open
   - Home screen: row count; column count
   - Double-tap-to-lock toggle with device admin request UI and explanations
+  - Backup and restore: export/import JSON (versioned; dry-run validation)
 
 - **Accessibility & UX**
   - ExploreByTouch accessibility helper for the grid; enlarged clickable regions (icon+label)

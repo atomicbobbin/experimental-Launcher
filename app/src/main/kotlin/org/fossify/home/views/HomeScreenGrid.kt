@@ -125,6 +125,12 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         }
     )
 
+    // Separate pager for dock (bottom row) pages
+    private var dockCurrentPage = 0
+    private fun getMaxDockPage() =
+        gridItems.filter { it.docked && it.parentId == null && !it.outOfBounds() }
+            .maxOfOrNull { it.page } ?: 0
+
     private var currentlyOpenFolder: HomeScreenFolder? = null
     private var draggingLeftFolderAt: Long? = null
     private var draggingEnteredNewFolderAt: Long? = null
@@ -329,6 +335,10 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     }
 
     fun itemDraggingStarted(draggedGridItem: HomeScreenGridItem) {
+        if (context.config.lockHomeLayout) {
+            (context as? MainActivity)?.toast(R.string.home_locked_toast)
+            return
+        }
         draggedItem = draggedGridItem
 
         if (draggedGridItem.type == ITEM_TYPE_WIDGET) {
@@ -447,6 +457,10 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
 
     @SuppressLint("ClickableViewAccessibility")
     fun widgetLongPressed(item: HomeScreenGridItem) {
+        if (context.config.lockHomeLayout) {
+            (context as? MainActivity)?.toast(R.string.home_locked_toast)
+            return
+        }
         resizedWidget = item
         redrawGrid()
 
@@ -548,6 +562,10 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     }
 
     private fun moveItem() {
+        if (context.config.lockHomeLayout) {
+            (context as? MainActivity)?.toast(R.string.home_locked_toast)
+            return
+        }
         val draggedHomeGridItem = gridItems.firstOrNull { it.id == draggedItem?.id }
         val center = gridCenters.minBy {
             abs(it.x - draggedItemCurrentCoords.first + sideMargins.left) + abs(it.y - draggedItemCurrentCoords.second + sideMargins.top)
@@ -628,6 +646,10 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     }
 
     private fun addAppIconOrShortcut() {
+        if (context.config.lockHomeLayout) {
+            (context as? MainActivity)?.toast(R.string.home_locked_toast)
+            return
+        }
         var isDroppingPositionValid = false
         var potentialParent: HomeScreenGridItem? = null
         var xIndex: Int? = null
@@ -952,6 +974,10 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     }
 
     private fun addWidget() {
+        if (context.config.lockHomeLayout) {
+            (context as? MainActivity)?.toast(R.string.home_locked_toast)
+            return
+        }
         val center = gridCenters.minBy {
             abs(it.x - draggedItemCurrentCoords.first + sideMargins.left) + abs(it.y - draggedItemCurrentCoords.second + sideMargins.top)
         }
@@ -1226,8 +1252,9 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
                 handleMainGridItemDrawing(item, currentXFactor)
             }
 
+        // Draw dock items on current dock page only
         gridItems
-            .filter { it.isSingleCellType() && it.docked && it.parentId == null }
+            .filter { it.isSingleCellType() && it.docked && it.parentId == null && it.page == dockCurrentPage }
             .forEach { item ->
                 if (item.outOfBounds()) {
                     return@forEach
@@ -1324,6 +1351,27 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
                 pageIndicatorRadius,
                 currentPageIndicatorPaint
             )
+        }
+
+        // Dock page indicators
+        val dockPageCount = getMaxDockPage() + 1
+        if (dockPageCount > 1) {
+            val usableWidth = getFakeWidth()
+            val radius = pageIndicatorRadius * 0.8f
+            val margin = pageIndicatorMargin * 0.8f
+            val requiredWidth = dockPageCount * radius * 2 + dockPageCount * (margin - 1)
+            val start = (usableWidth - requiredWidth) / 2 + sideMargins.left
+            var left = start
+            val y = dockCellY + cellHeight - iconMargin / 2f + sideMargins.top
+            emptyPageIndicatorPaint.alpha = 200
+            for (p in 0 until dockPageCount) {
+                canvas.drawCircle(left + radius, y, radius, emptyPageIndicatorPaint)
+                left += radius * 2 + margin
+            }
+            // current
+            currentPageIndicatorPaint.alpha = 255
+            val cx = start + (dockCurrentPage) * (radius * 2 + margin) + radius
+            canvas.drawCircle(cx, y, radius, currentPageIndicatorPaint)
         }
 
         val folder = currentlyOpenFolder
@@ -1820,6 +1868,21 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         accessibilityHelper.invalidateRoot()
     }
 
+    fun nextDockPage() {
+        val maxPage = getMaxDockPage()
+        if (dockCurrentPage < maxPage) {
+            dockCurrentPage++
+            redrawGrid()
+        }
+    }
+
+    fun prevDockPage() {
+        if (dockCurrentPage > 0) {
+            dockCurrentPage--
+            redrawGrid()
+        }
+    }
+
     fun closeFolder(redraw: Boolean = false) {
         currentlyOpenFolder?.animateClosing {
             currentlyOpenFolder = null
@@ -1867,28 +1930,32 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
                 )
 
                 if (item.id != draggedItem?.id && item.title.isNotEmpty()) {
-                    val textX = cell.left.toFloat() + labelSideMargin
-                    val textY = cell.top.toFloat() + iconSize + iconMargin + labelSideMargin
-                    val textPaintToUse = if (item.parentId == null) {
-                        textPaint
-                    } else {
-                        contrastTextPaint
-                    }
-                    val staticLayout = StaticLayout.Builder
-                        .obtain(
-                            item.title,
-                            0,
-                            item.title.length,
-                            textPaintToUse,
-                            cellWidth - 2 * labelSideMargin
-                        )
-                        .setMaxLines(2)
-                        .setEllipsize(TextUtils.TruncateAt.END)
-                        .setAlignment(Layout.Alignment.ALIGN_CENTER)
-                        .build()
+                    if (context.config.homeLabelVisible) {
+                        textPaint.textSize = context.config.homeLabelSizeSp * resources.displayMetrics.scaledDensity
+                        contrastTextPaint.textSize = textPaint.textSize
+                        val textX = cell.left.toFloat() + labelSideMargin
+                        val textY = cell.top.toFloat() + iconSize + iconMargin + labelSideMargin
+                        val textPaintToUse = if (item.parentId == null) {
+                            textPaint
+                        } else {
+                            contrastTextPaint
+                        }
+                        val staticLayout = StaticLayout.Builder
+                            .obtain(
+                                item.title,
+                                0,
+                                item.title.length,
+                                textPaintToUse,
+                                cellWidth - 2 * labelSideMargin
+                            )
+                            .setMaxLines(2)
+                            .setEllipsize(TextUtils.TruncateAt.END)
+                            .setAlignment(Layout.Alignment.ALIGN_CENTER)
+                            .build()
 
-                    withTranslation(textX, textY) {
-                        staticLayout.draw(this)
+                        withTranslation(textX, textY) {
+                            staticLayout.draw(this)
+                        }
                     }
                 }
             }
@@ -2018,10 +2085,17 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
             val cell = cells[item.getTopLeft(rowCount)] ?: return RectF(0f, 0f, 0f, 0f)
             val centerX = sideMargins.left + cell.centerX()
             val centerY = sideMargins.top + cell.centerY()
+            val preset = context.config.folderStylePreset
+            val paddingMultiplier = when (preset) {
+                1 -> 1.2f // soft round: a bit more padding
+                2 -> 0.8f // translucent: tighter
+                else -> 1.0f
+            }
+            val localFolderPadding = (folderPadding * paddingMultiplier)
             val folderDialogWidth =
-                columnsCount * cellSize + 2 * folderPadding + (columnsCount - 1) * gap
+                (columnsCount * cellSize + 2 * localFolderPadding + (columnsCount - 1) * gap)
             val folderDialogHeight =
-                rowsCount * cellSize + 3 * folderPadding + folderTitleTextPaint.textSize + rowsCount * yGap
+                (rowsCount * cellSize + 3 * localFolderPadding + folderTitleTextPaint.textSize + rowsCount * yGap)
             var folderDialogTop = centerY - folderDialogHeight / 2
             var folderDialogLeft = centerX - folderDialogWidth / 2
 
@@ -2036,6 +2110,17 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
             }
             if (folderDialogTop + folderDialogHeight > bottom - sideMargins.bottom) {
                 folderDialogTop -= folderDialogTop + folderDialogHeight - (bottom - sideMargins.bottom)
+            }
+
+            // Apply style visual tweaks
+            when (preset) {
+                1 -> { // soft round
+                    roundedCornerRadius = roundedCornerRadius * 1.5f
+                }
+                2 -> { // translucent
+                    folderBackgroundPaint.color = context.getProperBackgroundColor().adjustAlpha(0.85f)
+                }
+                else -> {}
             }
 
             return RectF(

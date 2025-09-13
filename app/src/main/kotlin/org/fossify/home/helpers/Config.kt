@@ -37,4 +37,63 @@ class Config(context: Context) : BaseConfig(context) {
         get() = prefs.getBoolean(AUTO_SHOW_KEYBOARD_IN_APP_DRAWER, false)
         set(autoShowKeyboardInAppDrawer) = prefs.edit()
             .putBoolean(AUTO_SHOW_KEYBOARD_IN_APP_DRAWER, autoShowKeyboardInAppDrawer).apply()
+
+    var lockHomeLayout: Boolean
+        get() = prefs.getBoolean(LOCK_HOME_LAYOUT, false)
+        set(lockHomeLayout) = prefs.edit().putBoolean(LOCK_HOME_LAYOUT, lockHomeLayout).apply()
+
+    var drawerSortMode: Int
+        get() = prefs.getInt(DRAWER_SORT_MODE, 0)
+        set(value) = prefs.edit().putInt(DRAWER_SORT_MODE, value).apply()
+
+    var autoAddNewApps: Boolean
+        get() = prefs.getBoolean(AUTO_ADD_NEW_APPS, false)
+        set(value) = prefs.edit().putBoolean(AUTO_ADD_NEW_APPS, value).apply()
+
+    // Label controls (drawer)
+    var drawerLabelVisible: Boolean
+        get() = prefs.getBoolean(DRAWER_LABEL_VISIBLE, true)
+        set(value) = prefs.edit().putBoolean(DRAWER_LABEL_VISIBLE, value).apply()
+
+    var drawerLabelSizeSp: Int
+        get() = prefs.getInt(DRAWER_LABEL_SIZE_SP, 12)
+        set(value) = prefs.edit().putInt(DRAWER_LABEL_SIZE_SP, value).apply()
+
+    // Label controls (home)
+    var homeLabelVisible: Boolean
+        get() = prefs.getBoolean(HOME_LABEL_VISIBLE, true)
+        set(value) = prefs.edit().putBoolean(HOME_LABEL_VISIBLE, value).apply()
+
+    var homeLabelSizeSp: Int
+        get() = prefs.getInt(HOME_LABEL_SIZE_SP, 12)
+        set(value) = prefs.edit().putInt(HOME_LABEL_SIZE_SP, value).apply()
+
+    // Folder style preset
+    var folderStylePreset: Int
+        get() = prefs.getInt(FOLDER_STYLE_PRESET, 0)
+        set(value) = prefs.edit().putInt(FOLDER_STYLE_PRESET, value).apply()
+
+    var useDynamicColors: Boolean
+        get() = prefs.getBoolean(USE_DYNAMIC_COLORS, true)
+        set(value) = prefs.edit().putBoolean(USE_DYNAMIC_COLORS, value).apply()
+
+    var useThemedIcons: Boolean
+        get() = prefs.getBoolean(USE_THEMED_ICONS, false)
+        set(value) = prefs.edit().putBoolean(USE_THEMED_ICONS, value).apply()
+
+    var iconPackPackage: String
+        get() = prefs.getString(ICON_PACK_PACKAGE, "") ?: ""
+        set(value) = prefs.edit().putString(ICON_PACK_PACKAGE, value).apply()
+
+    var iconShapeMode: Int
+        get() = prefs.getInt(ICON_SHAPE_MODE, 0)
+        set(value) = prefs.edit().putInt(ICON_SHAPE_MODE, value).apply()
+
+    var predictiveSuggestionsEnabled: Boolean
+        get() = prefs.getBoolean(PREDICTIVE_SUGGESTIONS_ENABLED, false)
+        set(value) = prefs.edit().putBoolean(PREDICTIVE_SUGGESTIONS_ENABLED, value).apply()
+
+    var predictiveSuggestionsCount: Int
+        get() = prefs.getInt(PREDICTIVE_SUGGESTIONS_COUNT, 4)
+        set(value) = prefs.edit().putInt(PREDICTIVE_SUGGESTIONS_COUNT, value).apply()
 }

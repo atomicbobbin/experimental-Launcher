@@ -11,6 +11,8 @@ interface ItemMenuListener {
     fun appInfo(gridItem: HomeScreenGridItem)
     fun remove(gridItem: HomeScreenGridItem)
     fun uninstall(gridItem: HomeScreenGridItem)
+    fun popupWidget(gridItem: HomeScreenGridItem)
+    fun setSwipeAction(gridItem: HomeScreenGridItem)
     fun onDismiss()
     fun beforeShow(menu: Menu)
 }

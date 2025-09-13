@@ -13,6 +13,20 @@ const val DRAWER_COLUMN_COUNT = "drawer_column_count"
 const val SHOW_SEARCH_BAR = "show_search_bar"
 const val CLOSE_APP_DRAWER = "close_app_drawer"
 const val AUTO_SHOW_KEYBOARD_IN_APP_DRAWER = "auto_show_keyboard_in_app_drawer"
+const val LOCK_HOME_LAYOUT = "lock_home_layout"
+const val DRAWER_SORT_MODE = "drawer_sort_mode"
+const val AUTO_ADD_NEW_APPS = "auto_add_new_apps"
+const val DRAWER_LABEL_VISIBLE = "drawer_label_visible"
+const val DRAWER_LABEL_SIZE_SP = "drawer_label_size_sp"
+const val HOME_LABEL_VISIBLE = "home_label_visible"
+const val HOME_LABEL_SIZE_SP = "home_label_size_sp"
+const val FOLDER_STYLE_PRESET = "folder_style_preset"
+const val USE_DYNAMIC_COLORS = "use_dynamic_colors"
+const val USE_THEMED_ICONS = "use_themed_icons"
+const val ICON_PACK_PACKAGE = "icon_pack_package"
+const val ICON_SHAPE_MODE = "icon_shape_mode" // 0 default, 1 circle, 2 rounded, 3 squircle
+const val PREDICTIVE_SUGGESTIONS_ENABLED = "predictive_suggestions_enabled"
+const val PREDICTIVE_SUGGESTIONS_COUNT = "predictive_suggestions_count"
 
 // default home screen grid size
 const val ROW_COUNT = 6

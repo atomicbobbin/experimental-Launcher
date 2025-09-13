@@ -84,6 +84,9 @@ import org.fossify.home.helpers.ITEM_TYPE_ICON
 import org.fossify.home.helpers.ITEM_TYPE_SHORTCUT
 import org.fossify.home.helpers.ITEM_TYPE_WIDGET
 import org.fossify.home.helpers.IconCache
+import org.fossify.home.core.ServiceLocator
+import org.fossify.home.gestures.GestureRouter
+import org.fossify.home.icons.IconResolver
 import org.fossify.home.helpers.REQUEST_ALLOW_BINDING_WIDGET
 import org.fossify.home.helpers.REQUEST_CONFIGURE_WIDGET
 import org.fossify.home.helpers.REQUEST_CREATE_SHORTCUT
@@ -130,7 +133,7 @@ class MainActivity : SimpleActivity(), FlingListener {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        useDynamicTheme = false
+        useDynamicTheme = config.useDynamicColors
 
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
@@ -223,6 +226,9 @@ class MainActivity : SimpleActivity(), FlingListener {
                 insets
             }
         }
+
+        // Ensure latest desktop state (e.g., auto-added icons) is reflected
+        binding.homeScreenGrid.root.fetchGridItems()
 
         ensureBackgroundThread {
             if (IconCache.launchers.isEmpty()) {
@@ -836,6 +842,16 @@ class MainActivity : SimpleActivity(), FlingListener {
         }
     }
 
+    private fun showPopupWidget(gridItem: HomeScreenGridItem) {
+        // Placeholder: reuse Widgets fragment as popup selection, or show simple toast
+        toast(R.string.popup_widget)
+    }
+
+    private fun configureSwipeAction(gridItem: HomeScreenGridItem) {
+        // Placeholder: open a simple chooser dialog in future
+        toast(R.string.set_swipe_action)
+    }
+
     private fun launchWallpapersIntent() {
         try {
             Intent(Intent.ACTION_SET_WALLPAPER).apply {
@@ -885,11 +901,19 @@ class MainActivity : SimpleActivity(), FlingListener {
         }
 
         override fun rename(gridItem: HomeScreenGridItem) {
-            renameItem(gridItem)
+            if (config.lockHomeLayout) {
+                toast(R.string.home_locked_toast)
+            } else {
+                renameItem(gridItem)
+            }
         }
 
         override fun resize(gridItem: HomeScreenGridItem) {
-            binding.homeScreenGrid.root.widgetLongPressed(gridItem)
+            if (config.lockHomeLayout) {
+                toast(R.string.home_locked_toast)
+            } else {
+                binding.homeScreenGrid.root.widgetLongPressed(gridItem)
+            }
         }
 
         override fun appInfo(gridItem: HomeScreenGridItem) {
@@ -897,11 +921,23 @@ class MainActivity : SimpleActivity(), FlingListener {
         }
 
         override fun remove(gridItem: HomeScreenGridItem) {
-            binding.homeScreenGrid.root.removeAppIcon(gridItem)
+            if (config.lockHomeLayout) {
+                toast(R.string.home_locked_toast)
+            } else {
+                binding.homeScreenGrid.root.removeAppIcon(gridItem)
+            }
         }
 
         override fun uninstall(gridItem: HomeScreenGridItem) {
             uninstallApp(gridItem.packageName)
+        }
+
+        override fun popupWidget(gridItem: HomeScreenGridItem) {
+            showPopupWidget(gridItem)
+        }
+
+        override fun setSwipeAction(gridItem: HomeScreenGridItem) {
+            configureSwipeAction(gridItem)
         }
 
         override fun onDismiss() {
@@ -910,6 +946,12 @@ class MainActivity : SimpleActivity(), FlingListener {
         }
 
         override fun beforeShow(menu: Menu) {
+            if (config.lockHomeLayout) {
+                menu.findItem(R.id.rename)?.isVisible = false
+                menu.findItem(R.id.remove)?.isVisible = false
+                menu.findItem(R.id.resize)?.isVisible = false
+                menu.findItem(R.id.set_swipe_action)?.isVisible = false
+            }
             var visibleMenuItems = 0
             for (item in menu.iterator()) {
                 if (item.isVisible) {
@@ -1020,55 +1062,11 @@ class MainActivity : SimpleActivity(), FlingListener {
 
     @SuppressLint("WrongConstant")
     fun getAllAppLaunchers(): ArrayList<AppLauncher> {
-        val hiddenIcons = hiddenIconsDB.getHiddenIcons().map {
-            it.getIconIdentifier()
-        }
-
-        val allApps = ArrayList<AppLauncher>()
-        val intent = Intent(Intent.ACTION_MAIN, null)
-        intent.addCategory(Intent.CATEGORY_LAUNCHER)
-
-        val simpleLauncher = applicationContext.packageName
-        val microG = "com.google.android.gms"
-        val list = packageManager.queryIntentActivities(intent, PackageManager.PERMISSION_GRANTED)
-        for (info in list) {
-            val componentInfo = info.activityInfo.applicationInfo
-            val packageName = componentInfo.packageName
-            if (packageName == simpleLauncher || packageName == microG) {
-                continue
-            }
-
-            val activityName = info.activityInfo.name
-            if (hiddenIcons.contains("$packageName/$activityName")) {
-                continue
-            }
-
-            val label = info.loadLabel(packageManager).toString()
-            val drawable = info.loadIcon(packageManager)
-                ?: getDrawableForPackageName(packageName)
-                ?: continue
-
-            val bitmap = drawable.toBitmap(
-                width = max(drawable.intrinsicWidth, 1),
-                height = max(drawable.intrinsicHeight, 1),
-                config = Bitmap.Config.ARGB_8888
-            )
-            val placeholderColor = calculateAverageColor(bitmap)
-            allApps.add(
-                AppLauncher(
-                    id = null,
-                    title = label,
-                    packageName = packageName,
-                    activityName = activityName,
-                    order = 0,
-                    thumbnailColor = placeholderColor,
-                    drawable = bitmap.toDrawable(resources)
-                )
-            )
-        }
-
-        launchersDB.insertAll(allApps)
-        return allApps
+        ServiceLocator.settingsRepository.applyCapabilityGating(ServiceLocator.deviceCapabilities)
+        val hiddenIdentifiers = hiddenIconsDB.getHiddenIcons().map { it.getIconIdentifier() }.toSet()
+        val launchers = ServiceLocator.iconResolver.loadAllLaunchers(hiddenIdentifiers)
+        launchersDB.insertAll(launchers)
+        return ArrayList(launchers)
     }
 
     private fun getDefaultAppPackages(appLaunchers: ArrayList<AppLauncher>) {

@@ -53,9 +53,20 @@ class SettingsActivity : SimpleActivity() {
         setupCloseAppDrawerOnOtherAppOpen()
         setupOpenKeyboardOnAppDrawer()
         setupDrawerColumnCount()
+        setupDrawerSortOrder()
         setupDrawerSearchBar()
+        setupAutoAddNewApps()
+        setupDynamicColors()
+        setupThemedIcons()
+        setupIconPack()
+        setupIconShape()
+        setupPredictiveSuggestions()
+        setupSuggestionsCount()
         setupHomeRowCount()
         setupHomeColumnCount()
+        setupLabelControls()
+        setupFolderStyle()
+        setupLockHomeLayout()
         setupLanguage()
         setupManageHiddenIcons()
         updateTextColors(binding.settingsHolder)
@@ -144,6 +155,14 @@ class SettingsActivity : SimpleActivity() {
         }
     }
 
+    private fun setupAutoAddNewApps() {
+        binding.settingsAutoAddNewApps.isChecked = config.autoAddNewApps
+        binding.settingsAutoAddNewAppsHolder.setOnClickListener {
+            binding.settingsAutoAddNewApps.toggle()
+            config.autoAddNewApps = binding.settingsAutoAddNewApps.isChecked
+        }
+    }
+
     private fun setupDrawerColumnCount() {
         val currentColumnCount = config.drawerColumnCount
         binding.settingsDrawerColumnCount.text = currentColumnCount.toString()
@@ -177,6 +196,26 @@ class SettingsActivity : SimpleActivity() {
             binding.settingsShowSearchBar.toggle()
             config.showSearchBar = binding.settingsShowSearchBar.isChecked
             binding.settingsOpenKeyboardOnAppDrawerHolder.beVisibleIf(config.showSearchBar)
+        }
+    }
+
+    private fun setupDrawerSortOrder() {
+        val currentMode = config.drawerSortMode
+        binding.settingsDrawerSortOrder.text = when (currentMode) {
+            1 -> getString(R.string.sort_most_used)
+            2 -> getString(R.string.sort_recently_installed)
+            else -> getString(R.string.sort_alphabetical)
+        }
+        binding.settingsDrawerSortOrderHolder.setOnClickListener {
+            val items = listOf(
+                RadioItem(0, getString(R.string.sort_alphabetical)),
+                RadioItem(1, getString(R.string.sort_most_used)),
+                RadioItem(2, getString(R.string.sort_recently_installed))
+            )
+            RadioGroupDialog(this, ArrayList(items), currentMode) { selected ->
+                config.drawerSortMode = selected as Int
+                setupDrawerSortOrder()
+            }
         }
     }
 
@@ -232,6 +271,66 @@ class SettingsActivity : SimpleActivity() {
         }
     }
 
+    private fun setupLabelControls() {
+        binding.settingsDrawerLabelVisibility.isChecked = config.drawerLabelVisible
+        binding.settingsDrawerLabelVisibilityHolder.setOnClickListener {
+            binding.settingsDrawerLabelVisibility.toggle()
+            config.drawerLabelVisible = binding.settingsDrawerLabelVisibility.isChecked
+        }
+
+        binding.settingsDrawerLabelSize.text = config.drawerLabelSizeSp.toString()
+        binding.settingsDrawerLabelSizeHolder.setOnClickListener {
+            val sizes = (8..18).toList()
+            val items = ArrayList<RadioItem>()
+            sizes.forEach { sp -> items.add(RadioItem(sp, sp.toString())) }
+            RadioGroupDialog(this, items, config.drawerLabelSizeSp) { selected ->
+                config.drawerLabelSizeSp = selected as Int
+                setupLabelControls()
+            }
+        }
+
+        binding.settingsHomeLabelVisibility.isChecked = config.homeLabelVisible
+        binding.settingsHomeLabelVisibilityHolder.setOnClickListener {
+            binding.settingsHomeLabelVisibility.toggle()
+            config.homeLabelVisible = binding.settingsHomeLabelVisibility.isChecked
+        }
+
+        binding.settingsHomeLabelSize.text = config.homeLabelSizeSp.toString()
+        binding.settingsHomeLabelSizeHolder.setOnClickListener {
+            val sizes = (8..18).toList()
+            val items = ArrayList<RadioItem>()
+            sizes.forEach { sp -> items.add(RadioItem(sp, sp.toString())) }
+            RadioGroupDialog(this, items, config.homeLabelSizeSp) { selected ->
+                config.homeLabelSizeSp = selected as Int
+                setupLabelControls()
+            }
+        }
+    }
+
+    private fun setupFolderStyle() {
+        val styles = ArrayList<RadioItem>().apply {
+            add(RadioItem(0, getString(R.string.folder_style_default)))
+            add(RadioItem(1, getString(R.string.folder_style_soft_round)))
+            add(RadioItem(2, getString(R.string.folder_style_translucent)))
+        }
+        binding.settingsFolderStyle.text = styles.firstOrNull { it.id == config.folderStylePreset }?.title
+            ?: getString(R.string.folder_style_default)
+        binding.settingsFolderStyleHolder.setOnClickListener {
+            RadioGroupDialog(this, styles, config.folderStylePreset) { selected ->
+                config.folderStylePreset = selected as Int
+                setupFolderStyle()
+            }
+        }
+    }
+
+    private fun setupLockHomeLayout() {
+        binding.settingsLockHomeLayout.isChecked = config.lockHomeLayout
+        binding.settingsLockHomeLayoutHolder.setOnClickListener {
+            binding.settingsLockHomeLayout.toggle()
+            config.lockHomeLayout = binding.settingsLockHomeLayout.isChecked
+        }
+    }
+
     @SuppressLint("NewApi")
     private fun setupLanguage() {
         binding.settingsLanguage.text = Locale.getDefault().displayLanguage
@@ -244,6 +343,101 @@ class SettingsActivity : SimpleActivity() {
     private fun setupManageHiddenIcons() {
         binding.settingsManageHiddenIconsHolder.setOnClickListener {
             startActivity(Intent(this, HiddenIconsActivity::class.java))
+        }
+    }
+
+    // Backup/Restore UI hooks (placed under General section via toolbar menu in future)
+    private fun exportBackup(uri: Uri) {
+        val json = org.fossify.home.core.ServiceLocator.backupManager.exportJson()
+        contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) }
+    }
+
+    private fun importBackup(uri: Uri, dryRun: Boolean): Boolean {
+        val json = contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } ?: return false
+        val obj = org.json.JSONObject(json)
+        val bundle = org.fossify.home.backup.BackupManager.ExportBundle(
+            version = obj.getInt("version"),
+            settings = obj.getJSONObject("settings").let { jo ->
+                jo.keys().asSequence().associateWith { jo.get(it) }
+            },
+            layout = obj.getJSONObject("layout")
+        )
+        return org.fossify.home.core.ServiceLocator.backupManager.import(bundle, dryRun)
+    }
+
+    private fun setupDynamicColors() {
+        binding.settingsDynamicColors.isChecked = config.useDynamicColors
+        binding.settingsDynamicColorsHolder.setOnClickListener {
+            binding.settingsDynamicColors.toggle()
+            config.useDynamicColors = binding.settingsDynamicColors.isChecked
+        }
+    }
+
+    private fun setupThemedIcons() {
+        binding.settingsThemedIcons.isChecked = config.useThemedIcons
+        binding.settingsThemedIconsHolder.setOnClickListener {
+            binding.settingsThemedIcons.toggle()
+            config.useThemedIcons = binding.settingsThemedIcons.isChecked
+        }
+    }
+
+    private fun setupIconPack() {
+        val current = if (config.iconPackPackage.isEmpty()) getString(R.string.shape_default) else config.iconPackPackage
+        binding.settingsIconPack.text = current
+        binding.settingsIconPackHolder.setOnClickListener {
+            // Placeholder: future icon pack picker
+        }
+    }
+
+    private fun setupIconShape() {
+        binding.settingsIconShape.text = when (config.iconShapeMode) {
+            1 -> getString(R.string.shape_circle)
+            2 -> getString(R.string.shape_rounded)
+            3 -> getString(R.string.shape_squircle)
+            else -> getString(R.string.shape_default)
+        }
+        binding.settingsIconShapeHolder.setOnClickListener {
+            val items = arrayListOf(
+                RadioItem(0, getString(R.string.shape_default)),
+                RadioItem(1, getString(R.string.shape_circle)),
+                RadioItem(2, getString(R.string.shape_rounded)),
+                RadioItem(3, getString(R.string.shape_squircle)),
+            )
+            RadioGroupDialog(this, items, config.iconShapeMode) { selected ->
+                config.iconShapeMode = selected as Int
+                setupIconShape()
+            }
+        }
+    }
+
+    private fun setupPredictiveSuggestions() {
+        binding.settingsPredictiveSuggestions.isChecked = config.predictiveSuggestionsEnabled
+        binding.settingsPredictiveSuggestionsHolder.setOnClickListener {
+            binding.settingsPredictiveSuggestions.toggle()
+            config.predictiveSuggestionsEnabled = binding.settingsPredictiveSuggestions.isChecked
+        }
+    }
+
+    private fun setupSuggestionsCount() {
+        binding.settingsSuggestionsCount.text = config.predictiveSuggestionsCount.toString()
+        binding.settingsSuggestionsCountHolder.setOnClickListener {
+            val options = arrayListOf(
+                RadioItem(0, "2"),
+                RadioItem(1, "4"),
+                RadioItem(2, "6"),
+                RadioItem(3, "8"),
+            )
+            val currentIndex = when (config.predictiveSuggestionsCount) {
+                2 -> 0
+                4 -> 1
+                6 -> 2
+                8 -> 3
+                else -> 1
+            }
+            RadioGroupDialog(this, options, currentIndex) { selected ->
+                config.predictiveSuggestionsCount = listOf(2, 4, 6, 8)[selected as Int]
+                setupSuggestionsCount()
+            }
         }
     }
 

@@ -33,6 +33,8 @@ class LaunchersAdapter(
     RecyclerViewFastScroller.OnPopupTextUpdate {
 
     private var textColor = activity.getProperTextColor()
+    private var labelVisible = activity.config.drawerLabelVisible
+    private var labelSizeSp = activity.config.drawerLabelSizeSp
     private var iconPadding = 0
 
     init {
@@ -81,6 +83,8 @@ class LaunchersAdapter(
             itemView.apply {
                 binding.launcherLabel.text = launcher.title
                 binding.launcherLabel.setTextColor(textColor)
+                binding.launcherLabel.visibility = if (labelVisible) View.VISIBLE else View.GONE
+                binding.launcherLabel.textSize = labelSizeSp.toFloat()
                 binding.launcherIcon.setPadding(iconPadding, iconPadding, iconPadding, 0)
 
                 if (launcher.drawable != null && binding.launcherIcon.tag == true) {
