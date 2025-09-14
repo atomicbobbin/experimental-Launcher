@@ -27,7 +27,7 @@ object ErrorHandler {
         if (showToast) {
             val message = userMessage ?: getDefaultErrorMessage(error)
             try {
-                showErrorToast(context, message)
+                context.showErrorToast(message)
             } catch (e: Exception) {
                 // Fallback to system toast if custom toast fails
                 Toast.makeText(context, message, Toast.LENGTH_LONG).show()
@@ -64,7 +64,7 @@ object ErrorHandler {
         if (showToast && appContext != null) {
             val message = userMessage ?: getDefaultErrorMessage(error)
             try {
-                showErrorToast(appContext, message)
+                appContext.showErrorToast(message)
             } catch (e: Exception) {
                 Logger.e("Failed to show error toast", e)
             }
@@ -105,7 +105,7 @@ object ErrorHandler {
         }
         
         try {
-            showErrorToast(context, userMessage)
+            context.showErrorToast(userMessage)
         } catch (e: Exception) {
             Logger.e("Failed to show database error toast", e)
         }
@@ -133,7 +133,7 @@ object ErrorHandler {
         }
         
         try {
-            showErrorToast(context, userMessage)
+            context.showErrorToast(userMessage)
         } catch (e: Exception) {
             Logger.e("Failed to show network error toast", e)
         }
@@ -161,7 +161,7 @@ object ErrorHandler {
         }
         
         try {
-            showErrorToast(context, userMessage)
+            context.showErrorToast(userMessage)
         } catch (e: Exception) {
             Logger.e("Failed to show file system error toast", e)
         }

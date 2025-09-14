@@ -1,6 +1,6 @@
 package org.fossify.home.menu
 
-import android.content.Context
+import android.app.Activity
 import android.graphics.Color
 import android.view.ContextThemeWrapper
 import android.view.Gravity
@@ -17,7 +17,7 @@ import org.fossify.home.models.HomeScreenGridItem
  * Manages popup menus for the launcher.
  * Extracted from MainActivity to improve separation of concerns.
  */
-class MenuManager(private val context: Context) {
+class MenuManager(private val context: Activity) {
     
     private var openPopupMenu: PopupMenu? = null
     
@@ -49,7 +49,7 @@ class MenuManager(private val context: Context) {
         anchorView.x = x
         anchorView.y = anchorY
 
-        openPopupMenu = handleGridItemPopupMenu(
+        openPopupMenu = context.handleGridItemPopupMenu(
             anchorView = anchorView,
             gridItem = gridItem,
             isOnAllAppsFragment = isOnAllAppsFragment,
@@ -69,14 +69,14 @@ class MenuManager(private val context: Context) {
         anchorView.x = x
         anchorView.y = y - context.resources.getDimension(R.dimen.long_press_anchor_button_offset_y) * 2
         
-        val contextTheme = ContextThemeWrapper(context, getPopupMenuTheme())
+        val contextTheme = ContextThemeWrapper(context, context.getPopupMenuTheme())
         PopupMenu(
             contextTheme,
             anchorView,
             Gravity.TOP or Gravity.END
         ).apply {
             inflate(R.menu.menu_home_screen)
-            menu.findItem(R.id.set_as_default).isVisible = !isDefaultLauncher()
+            menu.findItem(R.id.set_as_default).isVisible = !context.isDefaultLauncher()
             setOnMenuItemClickListener { item ->
                 onMenuItemClick(item.itemId)
                 true

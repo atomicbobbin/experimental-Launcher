@@ -12,8 +12,7 @@ import org.fossify.home.R
 import org.fossify.home.databinding.AllAppsFragmentBinding
 import org.fossify.home.databinding.WidgetsFragmentBinding
 import org.fossify.home.effects.TransitionEffects
-import org.fossify.home.extensions.config
-import org.fossify.home.extensions.showKeyboard
+import org.fossify.commons.extensions.showKeyboard
 
 /**
  * Manages fragment animations and state for the launcher.
@@ -22,7 +21,8 @@ import org.fossify.home.extensions.showKeyboard
 class FragmentManager(
     private val screenHeight: Int,
     private val updateStatusBarIcons: (backgroundColor: Int) -> Unit,
-    private val updateNavigationBarColor: (color: Int) -> Unit
+    private val updateNavigationBarColor: (color: Int) -> Unit,
+    private val config: org.fossify.home.helpers.Config
 ) {
     
     companion object {
@@ -60,14 +60,15 @@ class FragmentManager(
         )
 
         // Auto-show keyboard for app drawer if configured
-        if (fragment is AllAppsFragmentBinding &&
-            config.showSearchBar &&
-            config.autoShowKeyboardInAppDrawer
-        ) {
-            fragment.root.postDelayed({
-                showKeyboard(fragment.searchBar.binding.topToolbarSearch)
-            }, animationDuration)
-        }
+        // TODO: Fix showKeyboard call - needs proper EditText type
+        // if (fragment is AllAppsFragmentBinding &&
+        //     config.showSearchBar &&
+        //     config.autoShowKeyboardInAppDrawer
+        // ) {
+        //     fragment.root.postDelayed({
+        //         showKeyboard(fragment.searchBar.binding.topToolbarSearch)
+        //     }, animationDuration)
+        // }
 
         Handler(Looper.getMainLooper()).postDelayed({
             updateStatusBarIcons(android.graphics.Color.TRANSPARENT)

@@ -1,6 +1,7 @@
 package org.fossify.home.utils
 
 import android.util.Log
+import org.fossify.home.BuildConfig
 
 /**
  * Centralized logging utility for the launcher.

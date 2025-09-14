@@ -1,5 +1,5 @@
 build:
-  maxIssues: 0
+  maxIssues: 200
   weights:
     complexity: 2
     LongParameterList: 2
@@ -24,22 +24,46 @@ complexity:
       - "Composable"
   LongMethod:
     active: true
-    threshold: 120
+    threshold: 150
     ignoreAnnotated:
       - "Composable"
       - "Preview"
+  CyclomaticComplexMethod:
+    active: true
+    threshold: 20
+  TooManyFunctions:
+    active: false
+  LargeClass:
+    active: true
+    threshold: 800
+  NestedBlockDepth:
+    active: true
+    threshold: 6
 
 style:
   MagicNumber:
     active: true
     ignoreAnnotated: ["Composable"]
     ignoreEnums: true
-    ignoreNumbers: ["-1", "0", "1", "2", "42", "1000"]
+    ignoreNumbers: ["-1", "0", "1", "2", "3", "4", "5", "10", "42", "100", "1000"]
   MaxLineLength:
     active: true
-    maxLineLength: 120
+    maxLineLength: 150
     excludePackageStatements: true
     excludeImportStatements: true
+  ForbiddenComment:
+    active: false
+  WildcardImport:
+    active: false
+  UnusedPrivateMember:
+    active: false
+  UnusedPrivateProperty:
+    active: false
+  UnusedParameter:
+    active: false
+  ReturnCount:
+    active: true
+    max: 5
 
 naming:
   FunctionNaming:

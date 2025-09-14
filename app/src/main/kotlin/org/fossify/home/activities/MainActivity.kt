@@ -26,8 +26,10 @@ import android.provider.Settings
 import android.provider.Telephony
 import android.telecom.TelecomManager
 import android.view.GestureDetector
+import android.view.Menu
 import android.view.MotionEvent
 import androidx.core.graphics.drawable.toBitmap
+import androidx.core.net.toUri
 import androidx.core.view.GestureDetectorCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -110,6 +112,12 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
     private var actionOnWidgetConfiguredWidget: ((granted: Boolean) -> Unit)? = null
     private var actionOnAddShortcut: ((shortcutId: String, label: String, icon: Drawable) -> Unit)? = null
     private var wasJustPaused: Boolean = false
+    
+    // Touch handling properties
+    private var mTouchDownX: Float = -1f
+    private var mTouchDownY: Float = -1f
+    private var mMoveGestureThreshold: Float = 10f
+    private var mIgnoreMoveEvents: Boolean = false
 
     private val binding by viewBinding(ActivityMainBinding::inflate)
 
@@ -225,7 +233,8 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
             fragmentManager = FragmentManager(
                 screenHeight = screenHeight,
                 updateStatusBarIcons = { backgroundColor -> updateStatusBarIcons(backgroundColor) },
-                updateNavigationBarColor = { color -> window.navigationBarColor = color }
+                updateNavigationBarColor = { color -> window.navigationBarColor = color },
+                config = config
             )
             
             // Initialize menu manager
@@ -644,7 +653,7 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
 
     // some devices ACTION_MOVE keeps triggering for the whole long press duration, but we are interested in real moves only, when coords change
     private fun hasFingerMoved(event: MotionEvent): Boolean {
-        return mTouchDownX != -1 && mTouchDownY != -1 &&
+        return mTouchDownX != -1f && mTouchDownY != -1f &&
                 (abs(mTouchDownX - event.x) > mMoveGestureThreshold || abs(mTouchDownY - event.y) > mMoveGestureThreshold)
     }
 
@@ -744,51 +753,6 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
         }
     }
 
-    fun homeScreenLongPressed(eventX: Float, eventY: Float) {
-        if (isAllAppsFragmentExpanded()) {
-            return
-        }
-
-        val (x, y) = binding.homeScreenGrid.root.intoViewSpaceCoords(eventX, eventY)
-        mIgnoreMoveEvents = true
-        val clickedGridItem = binding.homeScreenGrid.root.isClickingGridItem(x.toInt(), y.toInt())
-        if (clickedGridItem != null) {
-            performItemLongClick(x, clickedGridItem)
-            return
-        }
-
-        binding.mainHolder.performHapticFeedback()
-        showMainLongPressMenu(x, y)
-    }
-
-    fun homeScreenClicked(eventX: Float, eventY: Float) {
-        binding.homeScreenGrid.root.hideResizeLines()
-        val (x, y) = binding.homeScreenGrid.root.intoViewSpaceCoords(eventX, eventY)
-        val clickedGridItem = binding.homeScreenGrid.root.isClickingGridItem(x.toInt(), y.toInt())
-        if (clickedGridItem != null) {
-            performItemClick(clickedGridItem)
-        }
-        if (clickedGridItem?.type != ITEM_TYPE_FOLDER) {
-            binding.homeScreenGrid.root.closeFolder(redraw = true)
-        }
-    }
-
-    fun homeScreenDoubleTapped(eventX: Float, eventY: Float) {
-        val (x, y) = binding.homeScreenGrid.root.intoViewSpaceCoords(eventX, eventY)
-        val clickedGridItem = binding.homeScreenGrid.root.isClickingGridItem(x.toInt(), y.toInt())
-        if (clickedGridItem != null) {
-            return
-        }
-
-        val devicePolicyManager =
-            getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager
-        val isLockDeviceAdminActive = devicePolicyManager.isAdminActive(
-            ComponentName(this, LockDeviceAdminReceiver::class.java)
-        )
-        if (isLockDeviceAdminActive) {
-            devicePolicyManager.lockNow()
-        }
-    }
 
     fun closeAppDrawer(delayed: Boolean = false) {
         fragmentManager.closeAppDrawer(
@@ -853,7 +817,7 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
             anchorView = binding.homeScreenPopupMenuAnchor,
             menuListener = menuListener,
             getClickableRect = { item -> binding.homeScreenGrid.root.getClickableRect(item) },
-            getCurrentIconSize = { binding.homeScreenGrid.root.getCurrentIconSize() },
+            getCurrentIconSize = { binding.homeScreenGrid.root.getCurrentIconSize().toFloat() },
             getIconSize = { realScreenSize.x / config.drawerColumnCount }
         )
     }
@@ -1024,7 +988,8 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
                 menu.findItem(R.id.set_swipe_action)?.isVisible = false
             }
             var visibleMenuItems = 0
-            for (item in menu.iterator()) {
+            for (i in 0 until menu.size()) {
+                val item = menu.getItem(i)
                 if (item.isVisible) {
                     visibleMenuItems++
                 }
