@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.MotionEvent
 import org.fossify.home.gestures.GestureHandlerCallback
 import org.fossify.home.interfaces.FlingListener
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -11,14 +12,14 @@ import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.Mockito.withSettings
 import org.mockito.junit.MockitoJUnitRunner
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
-@RunWith(MockitoJUnitRunner::class)
+@RunWith(RobolectricTestRunner::class)
 class GestureHandlerTest {
 
-    @Mock
     private lateinit var context: Context
 
-    @Mock
     private lateinit var flingListener: FlingListener
     
     // Create a mock that implements both interfaces
@@ -28,6 +29,12 @@ class GestureHandlerTest {
 
     @Before
     fun setUp() {
+        // Use Robolectric's context instead of mock
+        context = RuntimeEnvironment.getApplication()
+        
+        // Initialize mocks manually since we're using RobolectricTestRunner
+        flingListener = mock(FlingListener::class.java)
+        
         // Create a mock that implements both FlingListener and GestureHandlerCallback
         combinedCallback = mock(FlingListener::class.java, withSettings().extraInterfaces(GestureHandlerCallback::class.java))
         gestureHandler = GestureHandler(context, flingListener)

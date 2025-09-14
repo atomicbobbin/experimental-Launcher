@@ -3,6 +3,7 @@ package org.fossify.home.data
 import android.content.Context
 import android.content.SharedPreferences
 import org.fossify.home.core.DeviceCapabilities
+import org.fossify.home.helpers.Config
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -10,44 +11,34 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.junit.MockitoJUnitRunner
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
-@RunWith(MockitoJUnitRunner::class)
+@RunWith(RobolectricTestRunner::class)
 class SettingsRepositoryTest {
 
-    @Mock
     private lateinit var context: Context
-
-    @Mock
-    private lateinit var sharedPreferences: SharedPreferences
-
-    @Mock
-    private lateinit var editor: SharedPreferences.Editor
-
-    @Mock
-    private lateinit var deviceCapabilities: DeviceCapabilities
-
     private lateinit var settingsRepository: SettingsRepository
+    private lateinit var deviceCapabilities: DeviceCapabilities
 
     @Before
     fun setUp() {
-        `when`(context.applicationContext).thenReturn(context)
-        `when`(context.getSharedPreferences(anyString(), anyInt())).thenReturn(sharedPreferences)
-        `when`(sharedPreferences.edit()).thenReturn(editor)
-        `when`(editor.putInt(anyString(), anyInt())).thenReturn(editor)
-        `when`(editor.putBoolean(anyString(), anyBoolean())).thenReturn(editor)
-        `when`(editor.apply()).thenReturn(Unit)
-        
+        // Use Robolectric's context - this will use real SharedPreferences in test environment
+        context = RuntimeEnvironment.getApplication()
         settingsRepository = SettingsRepository(context)
+        
+        // Create a mock for DeviceCapabilities for the capability gating tests
+        deviceCapabilities = mock(DeviceCapabilities::class.java)
     }
 
     @Test
     fun `homeColumnCount getter returns correct value`() {
-        // Given
-        `when`(sharedPreferences.getInt("home_column_count", 3)).thenReturn(5)
-        
+        // Given - set a specific value
+        settingsRepository.homeColumnCount = 5
+
         // When
         val result = settingsRepository.homeColumnCount
-        
+
         // Then
         assertEquals(5, result)
     }
@@ -56,20 +47,19 @@ class SettingsRepositoryTest {
     fun `homeColumnCount setter saves value`() {
         // When
         settingsRepository.homeColumnCount = 7
-        
-        // Then
-        verify(editor).putInt("home_column_count", 7)
-        verify(editor).apply()
+
+        // Then - verify the value was actually saved
+        assertEquals(7, settingsRepository.homeColumnCount)
     }
 
     @Test
     fun `homeRowCount getter returns correct value`() {
-        // Given
-        `when`(sharedPreferences.getInt("home_row_count", 4)).thenReturn(6)
-        
+        // Given - set a specific value
+        settingsRepository.homeRowCount = 6
+
         // When
         val result = settingsRepository.homeRowCount
-        
+
         // Then
         assertEquals(6, result)
     }
@@ -78,22 +68,21 @@ class SettingsRepositoryTest {
     fun `homeRowCount setter saves value`() {
         // When
         settingsRepository.homeRowCount = 8
-        
-        // Then
-        verify(editor).putInt("home_row_count", 8)
-        verify(editor).apply()
+
+        // Then - verify the value was actually saved
+        assertEquals(8, settingsRepository.homeRowCount)
     }
 
     @Test
     fun `showSearchBar getter returns correct value`() {
-        // Given
-        `when`(sharedPreferences.getBoolean("show_search_bar", true)).thenReturn(false)
+        // Given - set a specific value
+        settingsRepository.showSearchBar = false
         
         // When
         val result = settingsRepository.showSearchBar
         
         // Then
-        assertEquals(false, result)
+        assertFalse(result)
     }
 
     @Test
@@ -101,9 +90,8 @@ class SettingsRepositoryTest {
         // When
         settingsRepository.showSearchBar = false
         
-        // Then
-        verify(editor).putBoolean("show_search_bar", false)
-        verify(editor).apply()
+        // Then - verify the value was actually saved
+        assertFalse(settingsRepository.showSearchBar)
     }
 
     @Test
