@@ -3,6 +3,7 @@ package org.fossify.home.data
 import android.content.Context
 import android.content.SharedPreferences
 import org.fossify.home.core.DeviceCapabilities
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith

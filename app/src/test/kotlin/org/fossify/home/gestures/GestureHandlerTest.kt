@@ -2,12 +2,14 @@ package org.fossify.home.gestures
 
 import android.content.Context
 import android.view.MotionEvent
+import org.fossify.home.gestures.GestureHandlerCallback
 import org.fossify.home.interfaces.FlingListener
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.*
+import org.mockito.Mockito.withSettings
 import org.mockito.junit.MockitoJUnitRunner
 
 @RunWith(MockitoJUnitRunner::class)
@@ -18,14 +20,16 @@ class GestureHandlerTest {
 
     @Mock
     private lateinit var flingListener: FlingListener
-
-    @Mock
-    private lateinit var gestureHandlerCallback: GestureHandlerCallback
+    
+    // Create a mock that implements both interfaces
+    private lateinit var combinedCallback: FlingListener
 
     private lateinit var gestureHandler: GestureHandler
 
     @Before
     fun setUp() {
+        // Create a mock that implements both FlingListener and GestureHandlerCallback
+        combinedCallback = mock(FlingListener::class.java, withSettings().extraInterfaces(GestureHandlerCallback::class.java))
         gestureHandler = GestureHandler(context, flingListener)
     }
 
@@ -33,13 +37,13 @@ class GestureHandlerTest {
     fun `onSingleTapUp calls homeScreenClicked when flingListener is GestureHandlerCallback`() {
         // Given
         val event = MotionEvent.obtain(0, 0, MotionEvent.ACTION_UP, 100f, 200f, 0)
-        val callbackHandler = GestureHandler(context, gestureHandlerCallback)
+        val callbackHandler = GestureHandler(context, combinedCallback)
         
         // When
         callbackHandler.onSingleTapUp(event)
         
         // Then
-        verify(gestureHandlerCallback).homeScreenClicked(100f, 200f)
+        verify(combinedCallback as GestureHandlerCallback).homeScreenClicked(100f, 200f)
         
         event.recycle()
     }
@@ -48,13 +52,13 @@ class GestureHandlerTest {
     fun `onDoubleTap calls homeScreenDoubleTapped when flingListener is GestureHandlerCallback`() {
         // Given
         val event = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 100f, 200f, 0)
-        val callbackHandler = GestureHandler(context, gestureHandlerCallback)
+        val callbackHandler = GestureHandler(context, combinedCallback)
         
         // When
         callbackHandler.onDoubleTap(event)
         
         // Then
-        verify(gestureHandlerCallback).homeScreenDoubleTapped(100f, 200f)
+        verify(combinedCallback as GestureHandlerCallback).homeScreenDoubleTapped(100f, 200f)
         
         event.recycle()
     }
@@ -63,13 +67,13 @@ class GestureHandlerTest {
     fun `onLongPress calls homeScreenLongPressed when flingListener is GestureHandlerCallback`() {
         // Given
         val event = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 100f, 200f, 0)
-        val callbackHandler = GestureHandler(context, gestureHandlerCallback)
+        val callbackHandler = GestureHandler(context, combinedCallback)
         
         // When
         callbackHandler.onLongPress(event)
         
         // Then
-        verify(gestureHandlerCallback).homeScreenLongPressed(100f, 200f)
+        verify(combinedCallback as GestureHandlerCallback).homeScreenLongPressed(100f, 200f)
         
         event.recycle()
     }

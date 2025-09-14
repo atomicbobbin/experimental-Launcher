@@ -1,14 +1,12 @@
 package org.fossify.home.touch
 
 import android.view.MotionEvent
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 @RunWith(MockitoJUnitRunner::class)
 class TouchEventManagerTest {
