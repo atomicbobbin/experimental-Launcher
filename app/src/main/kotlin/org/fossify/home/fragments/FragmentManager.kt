@@ -169,4 +169,16 @@ class FragmentManager(
             }
         }
     }
+    
+    /**
+     * Clean up resources to prevent memory leaks.
+     */
+    fun cleanup() {
+        // Cancel any pending animations
+        currentAnimator?.cancel()
+        currentAnimator = null
+        
+        // Clear any pending Handler callbacks
+        Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
+    }
 }

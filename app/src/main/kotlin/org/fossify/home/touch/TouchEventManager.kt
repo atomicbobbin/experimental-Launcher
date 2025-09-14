@@ -90,6 +90,15 @@ class TouchEventManager {
     fun resetFragmentTouches() {
         // This will be called by the activity to reset fragment states
     }
+    
+    /**
+     * Clean up resources to prevent memory leaks.
+     */
+    fun cleanup() {
+        longPressedIcon = null
+        lastTouchCoords = Pair(-1f, -1f)
+        resetFragmentTouches()
+    }
 }
 
 /**

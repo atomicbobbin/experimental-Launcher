@@ -14,27 +14,53 @@ class HomeScreenGridDrawingArea @JvmOverloads constructor(
 ) : View(context, attrs, defStyleAttr) {
 
     private var wallpaperDrawable: Drawable? = null
+    private var isUsingFallbackBackground = false
 
     init {
+        // Make this view transparent so wallpaper shows through
+        setBackgroundColor(android.graphics.Color.TRANSPARENT)
+        // Load wallpaper during initialization
         loadWallpaper()
     }
 
     private fun loadWallpaper() {
         try {
             val wallpaperManager = WallpaperManager.getInstance(context)
-            @SuppressLint("MissingPermission")
+            
+            // Try regular drawable first
             wallpaperDrawable = wallpaperManager.drawable
-            Log.d("Wallpaper", "Wallpaper loaded successfully")
+            if (wallpaperDrawable != null) {
+                Log.d("WallpaperDebug", "Wallpaper loaded successfully using regular drawable")
+                isUsingFallbackBackground = false
+            } else {
+                Log.w("WallpaperDebug", "Regular drawable is null, trying fastDrawable")
+                // Fallback to fastDrawable
+                wallpaperDrawable = wallpaperManager.fastDrawable
+                if (wallpaperDrawable != null) {
+                    Log.d("WallpaperDebug", "Wallpaper loaded successfully using fastDrawable")
+                    isUsingFallbackBackground = false
+                } else {
+                    Log.w("WallpaperDebug", "Both drawable and fastDrawable are null")
+                    isUsingFallbackBackground = true
+                }
+            }
+            
+            if (wallpaperDrawable != null) {
+                Log.d("WallpaperDebug", "Wallpaper bounds: ${wallpaperDrawable!!.bounds}")
+                Log.d("WallpaperDebug", "Wallpaper intrinsic size: ${wallpaperDrawable!!.intrinsicWidth}x${wallpaperDrawable!!.intrinsicHeight}")
+            }
         } catch (e: SecurityException) {
-            Log.w("Wallpaper", "Security exception loading wallpaper: ${e.message}")
-            // Use a gradient background as fallback
-            wallpaperDrawable = createGradientBackground()
-            Log.d("Wallpaper", "Using gradient fallback background")
+            Log.w("WallpaperDebug", "Security exception loading wallpaper: ${e.message}")
+            // Don't use fallback background - let FLAG_SHOW_WALLPAPER handle it
+            wallpaperDrawable = null
+            isUsingFallbackBackground = true
+            Log.d("WallpaperDebug", "Using FLAG_SHOW_WALLPAPER for background")
         } catch (e: Exception) {
-            Log.w("Wallpaper", "Error loading wallpaper: ${e.message}")
-            // Use a gradient background as fallback
-            wallpaperDrawable = createGradientBackground()
-            Log.d("Wallpaper", "Using gradient fallback background")
+            Log.w("WallpaperDebug", "Error loading wallpaper: ${e.message}")
+            // Don't use fallback background - let FLAG_SHOW_WALLPAPER handle it
+            wallpaperDrawable = null
+            isUsingFallbackBackground = true
+            Log.d("WallpaperDebug", "Using FLAG_SHOW_WALLPAPER for background")
         }
     }
 
@@ -46,18 +72,14 @@ class HomeScreenGridDrawingArea @JvmOverloads constructor(
     }
 
     override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
-        
-        // Draw wallpaper if available
-        wallpaperDrawable?.let { wallpaper ->
-            wallpaper.setBounds(0, 0, width, height)
-            wallpaper.draw(canvas)
-            Log.d("Wallpaper", "Drawing wallpaper: ${width}x${height}")
-        } ?: run {
-            Log.w("Wallpaper", "No wallpaper drawable available")
+        // Only draw wallpaper background if we successfully loaded it (not fallback)
+        // If wallpaper loading failed, let FLAG_SHOW_WALLPAPER handle the background
+        if (!isUsingFallbackBackground && wallpaperDrawable != null) {
+            wallpaperDrawable!!.setBounds(0, 0, width, height)
+            wallpaperDrawable!!.draw(canvas)
         }
         
-        // Draw grid content on top of wallpaper
+        // Draw the grid content on top
         (parent as HomeScreenGrid).drawInto(canvas)
     }
 

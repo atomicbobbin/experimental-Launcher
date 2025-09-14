@@ -144,6 +144,11 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     private var gridCenters = ArrayList<Point>()
     private var draggedItemCurrentCoords = Pair(-1, -1)
     private var widgetViews = ArrayList<MyAppWidgetHostView>()
+    private var processedWidgets = HashSet<Int>() // Track which widgets have been processed
+    
+    // Public accessors for debugging
+    val publicGridItems: ArrayList<HomeScreenGridItem> get() = gridItems
+    val publicWidgetViews: ArrayList<MyAppWidgetHostView> get() = widgetViews
 
     val appWidgetHost = MyAppWidgetHost(context, WIDGET_HOST_ID)
     private val appWidgetManager = AppWidgetManager.getInstance(context)
@@ -196,7 +201,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         }
 
         dragShadowCirclePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = context.resources.getColor(org.fossify.commons.R.color.hint_white)
+            color = androidx.core.content.ContextCompat.getColor(context, org.fossify.commons.R.color.hint_white)
             strokeWidth = context.resources.getDimension(org.fossify.commons.R.dimen.small_margin)
             style = Paint.Style.STROKE
         }
@@ -205,7 +210,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
             strokeWidth = context.resources.getDimension(R.dimen.page_indicator_stroke_width)
         }
         currentPageIndicatorPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = context.resources.getColor(android.R.color.white)
+            color = androidx.core.content.ContextCompat.getColor(context, android.R.color.white)
             style = Paint.Style.FILL
         }
 
@@ -1160,6 +1165,15 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         appWidgetProviderInfo: AppWidgetProviderInfo,
         item: HomeScreenGridItem,
     ) {
+        // Check if this widget has already been processed
+        if (processedWidgets.contains(item.widgetId)) {
+            android.util.Log.d("WidgetDebug", "Widget ${item.widgetId} already processed, skipping")
+            return
+        }
+        
+        // Mark widget as processed
+        processedWidgets.add(item.widgetId)
+        
         // we have to pass the base context here, else there will be errors with the themes
         val widgetView = appWidgetHost.createView(
             (context as MainActivity).baseContext,
@@ -1168,6 +1182,36 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         ) as MyAppWidgetHostView
         widgetView.tag = item.widgetId
         widgetView.setAppWidget(item.widgetId, appWidgetProviderInfo)
+        
+        // Debug: Log widget creation details
+        android.util.Log.d("WidgetDebug", "Widget created - ID: ${item.widgetId}, " +
+                "Provider: ${appWidgetProviderInfo.provider.className}, " +
+                "MinSize: ${appWidgetProviderInfo.minWidth}x${appWidgetProviderInfo.minHeight}, " +
+                "ResizeMode: ${appWidgetProviderInfo.resizeMode}, " +
+                "WidgetView: ${widgetView.javaClass.simpleName}")
+        
+        // Force widget update to ensure content renders
+        try {
+            appWidgetManager!!.updateAppWidget(item.widgetId, null)
+            android.util.Log.d("WidgetDebug", "Forced widget update for ID: ${item.widgetId}")
+            
+            // Delay visibility update to allow widget content to load
+            widgetView.postDelayed({
+                if (widgetView.childCount > 0) {
+                    val child = widgetView.getChildAt(0)
+                    if (child.width > 0 && child.height > 0) {
+                        android.util.Log.d("WidgetDebug", "Widget ${item.widgetId} content loaded: ${child.width}x${child.height}")
+                        // Content is ready, ensure visibility is correct
+                        updateWidgetVisibility(item, widgetView)
+                    } else {
+                        android.util.Log.d("WidgetDebug", "Widget ${item.widgetId} content not ready yet: ${child.width}x${child.height}")
+                    }
+                }
+            }, 1000) // Wait 1 second for content to load
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetDebug", "Failed to update widget ${item.widgetId}: ${e.message}")
+        }
+        
         widgetView.longPressListener = { x, y ->
             val activity = context as? MainActivity
             if (activity?.isAllAppsFragmentExpanded() == false) {
@@ -1181,8 +1225,29 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         }
 
         val widgetSize = updateWidgetPositionAndSize(widgetView, item)
-        addView(widgetView, widgetSize.width, widgetSize.height)
+        
+        // Set layout parameters with correct size
+        val layoutParams = RelativeLayout.LayoutParams(widgetSize.width, widgetSize.height)
+        widgetView.layoutParams = layoutParams
+        
+        addView(widgetView)
         widgetViews.add(widgetView)
+        
+        // Debug: Log widget placement details
+        android.util.Log.d("WidgetDebug", "Widget placed - ID: ${item.widgetId}, " +
+                "Size: ${widgetSize.width}x${widgetSize.height}, " +
+                "Position: (${widgetView.x}, ${widgetView.y}), " +
+                "Page: ${item.page}, " +
+                "OnCurrentPage: ${pager.isItemOnCurrentPage(item)}")
+        
+        // Ensure widget is visible when placed
+        if (pager.isItemOnCurrentPage(item)) {
+            widgetView.visibility = android.view.View.VISIBLE
+            android.util.Log.d("WidgetDebug", "Widget ${item.widgetId} set to VISIBLE")
+        } else {
+            widgetView.visibility = android.view.View.GONE
+            android.util.Log.d("WidgetDebug", "Widget ${item.widgetId} set to GONE (not on current page)")
+        }
 
         // remove the drawable so that it gets refreshed on long press
         item.drawable = null
@@ -1197,7 +1262,25 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     ): Size {
         val currentViewPosition = pager.getCurrentViewPositionInFullPageSpace() * width.toFloat()
         val widgetPos = calculateWidgetPos(item.getTopLeft(rowCount))
-        widgetView.x = widgetPos.x + width * item.page - currentViewPosition
+        
+        // Debug: Log positioning calculation details
+        android.util.Log.d("WidgetDebug", "Positioning calculation for widget ${item.widgetId}: " +
+                "widgetPos.x=${widgetPos.x}, item.page=${item.page}, width=${width}, " +
+                "currentViewPosition=${currentViewPosition}, " +
+                "getCurrentViewPositionInFullPageSpace()=${pager.getCurrentViewPositionInFullPageSpace()}, " +
+                "currentPage=${pager.getCurrentPage()}")
+        
+        // Fix: Ensure widgets are positioned on-screen
+        val baseX = widgetPos.x + width * item.page
+        val finalX = baseX - currentViewPosition
+        
+        // Ensure widget is not positioned off-screen
+        widgetView.x = if (finalX < 0) {
+            android.util.Log.w("WidgetDebug", "Widget ${item.widgetId} would be off-screen (x=$finalX), clamping to 0")
+            0f
+        } else {
+            finalX
+        }
         widgetView.y = widgetPos.y.toFloat()
         val widgetWidth = item.getWidthInCells() * cellWidth
         val widgetHeight = item.getHeightInCells() * cellHeight
@@ -1221,7 +1304,80 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
 
         widgetView.layoutParams?.width = widgetWidth
         widgetView.layoutParams?.height = widgetHeight
+        
+        // Debug: Log widget positioning details
+        android.util.Log.d("WidgetDebug", "Widget positioned - ID: ${item.widgetId}, " +
+                "Size: ${widgetWidth}x${widgetHeight}, " +
+                "Position: (${widgetView.x}, ${widgetView.y}), " +
+                "LayoutParams: ${widgetView.layoutParams?.width}x${widgetView.layoutParams?.height}, " +
+                "Visibility: ${widgetView.visibility}, " +
+                "Alpha: ${widgetView.alpha}, " +
+                "Background: ${widgetView.background}, " +
+                "ChildCount: ${widgetView.childCount}")
+        
+        // Check if widget content is actually visible
+        if (widgetView.childCount > 0) {
+            val child = widgetView.getChildAt(0)
+            android.util.Log.d("WidgetDebug", "Widget ${item.widgetId} child: ${child.javaClass.simpleName}, " +
+                    "Visibility: ${child.visibility}, Alpha: ${child.alpha}, " +
+                    "Width: ${child.width}, Height: ${child.height}")
+        }
+        
         return Size(widgetWidth, widgetHeight)
+    }
+    
+    /**
+     * Update widget visibility based on current page
+     */
+    private fun updateWidgetVisibility(item: HomeScreenGridItem, widgetView: MyAppWidgetHostView) {
+        if (pager.isItemOnCurrentPage(item)) {
+            widgetView.visibility = android.view.View.VISIBLE
+            android.util.Log.d("WidgetDebug", "Widget ${item.widgetId} visibility updated to VISIBLE")
+        } else {
+            widgetView.visibility = android.view.View.GONE
+            android.util.Log.d("WidgetDebug", "Widget ${item.widgetId} visibility updated to GONE")
+        }
+    }
+    
+    /**
+     * Update visibility for all widgets based on current page
+     */
+    private fun updateAllWidgetVisibility() {
+        gridItems
+            .filter { it.type == ITEM_TYPE_WIDGET && !it.outOfBounds() }
+            .forEach { item ->
+                widgetViews.firstOrNull { it.tag == item.widgetId }?.also { widgetView ->
+                    if (widgetView is MyAppWidgetHostView) {
+                        updateWidgetVisibility(item, widgetView)
+                    }
+                }
+            }
+    }
+    
+    /**
+     * Enable debug visualization for all widgets to help identify rendering issues
+     */
+    fun enableWidgetDebugVisualization() {
+        android.util.Log.d("WidgetDebug", "Enabling debug visualization for all widgets")
+        widgetViews.forEach { widgetView ->
+            if (widgetView is MyAppWidgetHostView) {
+                widgetView.setDebugVisualization(true)
+                widgetView.forceRedraw()
+                android.util.Log.d("WidgetDebug", "Debug visualization enabled for widget ${widgetView.tag}")
+            }
+        }
+    }
+    
+    /**
+     * Disable debug visualization for all widgets
+     */
+    fun disableWidgetDebugVisualization() {
+        android.util.Log.d("WidgetDebug", "Disabling debug visualization for all widgets")
+        widgetViews.forEach { widgetView ->
+            if (widgetView is MyAppWidgetHostView) {
+                widgetView.setDebugVisualization(false)
+            }
+        }
     }
 
     private fun calculateWidgetPos(topLeft: Point): Point {
@@ -1244,6 +1400,8 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     private fun redrawGrid() {
         post {
             setWillNotDraw(false)
+            // Update widget visibility when redrawing
+            updateAllWidgetVisibility()
             invalidate()
             if (this::binding.isInitialized) {
                 binding.drawingArea.invalidate()
@@ -1335,8 +1493,10 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
                             .firstOrNull { it.provider.className == item.className }
 
                     if (providerInfo != null) {
+                        android.util.Log.d("WidgetDebug", "Found provider info for widget ${item.widgetId}: ${providerInfo.provider.className}")
                         placeAppWidget(providerInfo, item)
                     } else {
+                        android.util.Log.w("WidgetDebug", "No provider info found for widget ${item.widgetId}, className: ${item.className}")
                         removeWidget(item)
                     }
                 }
@@ -1344,8 +1504,8 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
             gridItems
                 .filter { it.type == ITEM_TYPE_WIDGET && !it.outOfBounds() }
                 .forEach { item ->
-                    widgetViews.firstOrNull { it.tag == item.widgetId }?.also {
-                        updateWidgetPositionAndSize(it, item)
+                    widgetViews.firstOrNull { it.tag == item.widgetId }?.also { widgetView ->
+                        updateWidgetPositionAndSize(widgetView, item)
                     }
                 }
         }
@@ -1773,13 +1933,54 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
             virtualViewId: Int,
             node: AccessibilityNodeInfoCompat,
         ) {
-            val viewLocation = IntArray(2)
-            getLocationOnScreen(viewLocation)
+            try {
+                val viewLocation = IntArray(2)
+                getLocationOnScreen(viewLocation)
 
-            // home screen
-            if (virtualViewId == -1) {
-                node.text = context.getString(R.string.app_name)
-                val viewBounds = Rect(left, top, right, bottom)
+                // home screen
+                if (virtualViewId == -1) {
+                    node.text = context.getString(R.string.app_name)
+                    val viewBounds = Rect(left, top, right, bottom)
+                    val onScreenBounds = Rect(viewBounds)
+                    onScreenBounds.offset(viewLocation[0], viewLocation[1])
+                    node.setBoundsInScreen(onScreenBounds)
+                    node.setBoundsInParent(viewBounds)
+
+                    node.addAction(AccessibilityNodeInfoCompat.ACTION_CLICK)
+                    node.addAction(AccessibilityNodeInfoCompat.ACTION_LONG_CLICK)
+                    node.setParent(this@HomeScreenGrid)
+                    return
+                }
+
+                val item = gridItems.firstOrNull { it.id?.toInt() == virtualViewId }
+                if (item == null) {
+                    // Handle unknown virtual view ID gracefully
+                    android.util.Log.w("Accessibility", "Unknown virtual view ID: $virtualViewId")
+                    node.text = "Unknown item"
+                    node.setBoundsInScreen(Rect(0, 0, 0, 0))
+                    node.setBoundsInParent(Rect(0, 0, 0, 0))
+                    return
+                }
+
+                node.text = if (item.type == ITEM_TYPE_WIDGET) {
+                    item.providerInfo?.loadLabel(context.packageManager) ?: item.title
+                } else {
+                    item.title
+                }
+
+                val viewBounds = if (item == currentlyOpenFolder?.item) {
+                    currentlyOpenFolder?.getDrawingRect()?.toRect() ?: Rect(0, 0, 0, 0)
+                } else if (item.type == ITEM_TYPE_WIDGET) {
+                    val widgetPos = calculateWidgetPos(item.getTopLeft(rowCount))
+                    val left = widgetPos.x
+                    val top = widgetPos.y
+                    val right = left + item.getWidthInCells() * cellWidth
+                    val bottom = top + item.getHeightInCells() * cellHeight
+
+                    Rect(left, top, right, bottom)
+                } else {
+                    getClickableRect(item)
+                }
                 val onScreenBounds = Rect(viewBounds)
                 onScreenBounds.offset(viewLocation[0], viewLocation[1])
                 node.setBoundsInScreen(onScreenBounds)
@@ -1788,38 +1989,13 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
                 node.addAction(AccessibilityNodeInfoCompat.ACTION_CLICK)
                 node.addAction(AccessibilityNodeInfoCompat.ACTION_LONG_CLICK)
                 node.setParent(this@HomeScreenGrid)
+            } catch (e: Exception) {
+                // Log error and set safe defaults
+                android.util.Log.e("Accessibility", "Error in onPopulateNodeForVirtualView for ID: $virtualViewId", e)
+                node.text = "Error loading item"
+                node.setBoundsInScreen(Rect(0, 0, 0, 0))
+                node.setBoundsInParent(Rect(0, 0, 0, 0))
             }
-
-            val item = gridItems.firstOrNull { it.id?.toInt() == virtualViewId }
-                ?: throw IllegalArgumentException("Unknown id")
-
-            node.text = if (item.type == ITEM_TYPE_WIDGET) {
-                item.providerInfo?.loadLabel(context.packageManager) ?: item.title
-            } else {
-                item.title
-            }
-
-            val viewBounds = if (item == currentlyOpenFolder?.item) {
-                currentlyOpenFolder?.getDrawingRect()?.toRect()
-            } else if (item.type == ITEM_TYPE_WIDGET) {
-                val widgetPos = calculateWidgetPos(item.getTopLeft(rowCount))
-                val left = widgetPos.x
-                val top = widgetPos.y
-                val right = left + item.getWidthInCells() * cellWidth
-                val bottom = top + item.getHeightInCells() * cellHeight
-
-                Rect(left, top, right, bottom)
-            } else {
-                getClickableRect(item)
-            }
-            val onScreenBounds = Rect(viewBounds)
-            onScreenBounds.offset(viewLocation[0], viewLocation[1])
-            node.setBoundsInScreen(onScreenBounds)
-            node.setBoundsInParent(viewBounds)
-
-            node.addAction(AccessibilityNodeInfoCompat.ACTION_CLICK)
-            node.addAction(AccessibilityNodeInfoCompat.ACTION_LONG_CLICK)
-            node.setParent(this@HomeScreenGrid)
         }
 
         override fun onPerformActionForVirtualView(
@@ -1827,22 +2003,30 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
             action: Int,
             arguments: Bundle?,
         ): Boolean {
-            val item = gridItems.firstOrNull { it.id?.toInt() == virtualViewId }
-                ?: throw IllegalArgumentException("Unknown id")
-            when (action) {
-                AccessibilityNodeInfoCompat.ACTION_CLICK -> itemClickListener?.apply {
-                    if (item == currentlyOpenFolder?.item) {
-                        closeFolder(true)
-                    } else {
-                        invoke(item)
+            try {
+                val item = gridItems.firstOrNull { it.id?.toInt() == virtualViewId }
+                if (item == null) {
+                    android.util.Log.w("Accessibility", "Unknown virtual view ID for action: $virtualViewId")
+                    return false
+                }
+                
+                when (action) {
+                    AccessibilityNodeInfoCompat.ACTION_CLICK -> itemClickListener?.apply {
+                        if (item == currentlyOpenFolder?.item) {
+                            closeFolder(true)
+                        } else {
+                            invoke(item)
+                        }
+                        return true
                     }
-                    return true
-                }
 
-                AccessibilityNodeInfoCompat.ACTION_LONG_CLICK -> itemLongClickListener?.apply {
-                    invoke(item)
-                    return true
+                    AccessibilityNodeInfoCompat.ACTION_LONG_CLICK -> itemLongClickListener?.apply {
+                        invoke(item)
+                        return true
+                    }
                 }
+            } catch (e: Exception) {
+                android.util.Log.e("Accessibility", "Error in onPerformActionForVirtualView for ID: $virtualViewId", e)
             }
 
             return false
@@ -2310,6 +2494,35 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
             } else {
                 cellSize / 5f
             }
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        cleanup()
+    }
+    
+    /**
+     * Clean up resources to prevent memory leaks
+     */
+    private fun cleanup() {
+        try {
+            // Remove all pending Handler callbacks
+            getHandler().removeCallbacks(startFadingIndicators)
+            getHandler().removeCallbacks(checkAndExecuteDelayedPageChange)
+            
+            // Clear widget views
+            publicWidgetViews.clear()
+            
+            // Clear icon cache references
+            iconCache.clear()
+            
+            // Clear any pending animations
+            pageChangeAnimator?.cancel()
+            pageChangeAnimator = null
+            
+        } catch (e: Exception) {
+            android.util.Log.w("HomeScreenGrid", "Error during cleanup", e)
         }
     }
 

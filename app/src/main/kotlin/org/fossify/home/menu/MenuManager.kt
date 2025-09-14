@@ -104,4 +104,12 @@ class MenuManager(private val context: Activity) {
     fun handleMenuItemClick(itemId: Int, onAction: (Int) -> Unit) {
         onAction(itemId)
     }
+    
+    /**
+     * Clean up resources to prevent memory leaks.
+     */
+    fun cleanup() {
+        // Dismiss any open popup menus
+        dismissPopupMenu()
+    }
 }

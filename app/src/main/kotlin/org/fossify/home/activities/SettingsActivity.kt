@@ -10,6 +10,7 @@ import androidx.appcompat.app.AlertDialog
 import org.fossify.commons.dialogs.RadioGroupDialog
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getProperPrimaryColor
+import org.fossify.commons.extensions.toast
 import org.fossify.commons.extensions.updateTextColors
 import org.fossify.commons.extensions.viewBinding
 import org.fossify.commons.helpers.NavigationIcon
@@ -51,8 +52,6 @@ class SettingsActivity : SimpleActivity() {
         setupToolbar(binding.settingsToolbar, NavigationIcon.Arrow)
         refreshMenuItems()
         
-        // TODO: Re-enable notification listener check after fixing binding issues
-        /*
         // Check if notification listener permission was granted
         if (isNotificationListenerEnabled()) {
             if (!config.enableNotificationBadges && binding.settingsNotificationBadges.isChecked) {
@@ -68,7 +67,6 @@ class SettingsActivity : SimpleActivity() {
                 refreshNotificationBadges()
             }
         }
-        */
 
         setupCustomizeColors()
         setupUseEnglish()
@@ -90,23 +88,25 @@ class SettingsActivity : SimpleActivity() {
         setupHomeIconSize()
         setupDrawerIconSize()
         setupGridMargin()
-        // setupBlurEffects() // TODO: Re-enable after fixing binding issues
-        // setupBlurIntensity() // TODO: Re-enable after fixing binding issues
+        setupBlurEffects()
+        setupBlurIntensity()
         setupTransitionEffects()
-        // setupNotificationBadges() // TODO: Re-enable after fixing binding issues
-        // setupBadgeStyle() // TODO: Re-enable after fixing binding issues
+        setupNotificationBadges()
+        setupBadgeStyle()
         setupLabelControls()
         setupFolderStyle()
         setupLockHomeLayout()
         setupLanguage()
         setupManageHiddenIcons()
+        setupDebugTools()
         updateTextColors(binding.settingsHolder)
 
         arrayOf(
             binding.settingsColorCustomizationSectionLabel,
             binding.settingsGeneralSettingsLabel,
             binding.settingsDrawerSettingsLabel,
-            binding.settingsHomeScreenLabel
+            binding.settingsHomeScreenLabel,
+            binding.settingsDebugToolsLabel
         ).forEach {
             it.setTextColor(getProperPrimaryColor())
         }
@@ -368,44 +368,43 @@ class SettingsActivity : SimpleActivity() {
     }
 
     private fun setupBlurEffects() {
-        // TODO: Implement blur effects settings UI
         // Only show blur settings if device supports it
         val supportsBlur = ServiceLocator.deviceCapabilities.supportsRenderEffectBlur
-        // binding.settingsVisualEffectsLabel.beVisibleIf(supportsBlur)
-        // binding.settingsBlurEffectsHolder.beVisibleIf(supportsBlur)
-        // binding.settingsBlurIntensityHolder.beVisibleIf(supportsBlur)
+        binding.settingsVisualEffectsLabel.beVisibleIf(supportsBlur)
+        binding.settingsBlurEffectsHolder.beVisibleIf(supportsBlur)
+        binding.settingsBlurIntensityHolder.beVisibleIf(supportsBlur)
 
         if (!supportsBlur) return
 
-        // binding.settingsBlurEffects.isChecked = config.enableBlurEffects
-        // binding.settingsBlurEffectsHolder.setOnClickListener {
-        //     binding.settingsBlurEffects.toggle()
-        //     config.enableBlurEffects = binding.settingsBlurEffects.isChecked
-        //     refreshBlurEffects()
-        //     setupBlurIntensity() // Update intensity visibility
-        // }
+        binding.settingsBlurEffects.isChecked = config.enableBlurEffects
+        binding.settingsBlurEffectsHolder.setOnClickListener {
+            binding.settingsBlurEffects.toggle()
+            config.enableBlurEffects = binding.settingsBlurEffects.isChecked
+            refreshBlurEffects()
+            setupBlurIntensity() // Update intensity visibility
+        }
     }
 
     private fun setupBlurIntensity() {
         val supportsBlur = ServiceLocator.deviceCapabilities.supportsRenderEffectBlur
         val blurEnabled = config.enableBlurEffects
-        // binding.settingsBlurIntensityHolder.beVisibleIf(supportsBlur && blurEnabled)
+        binding.settingsBlurIntensityHolder.beVisibleIf(supportsBlur && blurEnabled)
 
         if (!supportsBlur || !blurEnabled) return
 
         val currentIntensity = config.blurIntensity
-        // binding.settingsBlurIntensity.text = currentIntensity.toString()
-        // binding.settingsBlurIntensityHolder.setOnClickListener {
-        //     val items = ArrayList<RadioItem>()
-        //     for (intensity in MIN_BLUR_INTENSITY..MAX_BLUR_INTENSITY step 5) {
-        //         items.add(RadioItem(intensity, intensity.toString()))
-        //     }
-        //     RadioGroupDialog(this, items, currentIntensity) { selected ->
-        //         config.blurIntensity = selected as Int
-        //         setupBlurIntensity()
-        //         refreshBlurEffects()
-        //     }
-        // }
+        binding.settingsBlurIntensity.text = currentIntensity.toString()
+        binding.settingsBlurIntensityHolder.setOnClickListener {
+            val items = ArrayList<RadioItem>()
+            for (intensity in MIN_BLUR_INTENSITY..MAX_BLUR_INTENSITY step 5) {
+                items.add(RadioItem(intensity, intensity.toString()))
+            }
+            RadioGroupDialog(this, items, currentIntensity) { selected ->
+                config.blurIntensity = selected as Int
+                setupBlurIntensity()
+                refreshBlurEffects()
+            }
+        }
     }
 
     private fun refreshBlurEffects() {
@@ -452,49 +451,47 @@ class SettingsActivity : SimpleActivity() {
     }
 
     private fun setupNotificationBadges() {
-        // TODO: Implement notification badges settings UI
-        // binding.settingsNotificationBadges.isChecked = config.enableNotificationBadges
-        // binding.settingsNotificationBadgesHolder.setOnClickListener {
-        //     if (!binding.settingsNotificationBadges.isChecked) {
-        //         // Request notification listener permission
-        //         requestNotificationListenerPermission()
-        //     } else {
-        //         // Disable badges
-        //         binding.settingsNotificationBadges.toggle()
-        //         config.enableNotificationBadges = binding.settingsNotificationBadges.isChecked
-        //         setupBadgeStyle() // Update badge style visibility
-        //         refreshNotificationBadges()
-        //     }
-        // }
+        binding.settingsNotificationBadges.isChecked = config.enableNotificationBadges
+        binding.settingsNotificationBadgesHolder.setOnClickListener {
+            if (!binding.settingsNotificationBadges.isChecked) {
+                // Request notification listener permission
+                requestNotificationListenerPermission()
+            } else {
+                // Disable badges
+                binding.settingsNotificationBadges.toggle()
+                config.enableNotificationBadges = binding.settingsNotificationBadges.isChecked
+                setupBadgeStyle() // Update badge style visibility
+                refreshNotificationBadges()
+            }
+        }
     }
 
     private fun setupBadgeStyle() {
-        // TODO: Implement badge style settings UI
         val badgesEnabled = config.enableNotificationBadges
-        // binding.settingsBadgeStyleHolder.beVisibleIf(badgesEnabled)
+        binding.settingsBadgeStyleHolder.beVisibleIf(badgesEnabled)
 
         if (!badgesEnabled) return
 
         val currentStyle = config.notificationBadgeStyle
-        // binding.settingsBadgeStyle.text = when (currentStyle) {
-        //     BADGE_STYLE_DOT -> getString(R.string.badge_style_dot)
-        //     BADGE_STYLE_COUNT -> getString(R.string.badge_style_count)
-        //     BADGE_STYLE_LARGE_DOT -> getString(R.string.badge_style_large_dot)
-        //     else -> getString(R.string.badge_style_dot)
-        // }
+        binding.settingsBadgeStyle.text = when (currentStyle) {
+            BADGE_STYLE_DOT -> getString(R.string.badge_style_dot)
+            BADGE_STYLE_COUNT -> getString(R.string.badge_style_count)
+            BADGE_STYLE_LARGE_DOT -> getString(R.string.badge_style_large_dot)
+            else -> getString(R.string.badge_style_dot)
+        }
         
-        // binding.settingsBadgeStyleHolder.setOnClickListener {
-        //     val items = listOf(
-        //         RadioItem(BADGE_STYLE_DOT, getString(R.string.badge_style_dot)),
-        //         RadioItem(BADGE_STYLE_COUNT, getString(R.string.badge_style_count)),
-        //         RadioItem(BADGE_STYLE_LARGE_DOT, getString(R.string.badge_style_large_dot))
-        //     )
-        //     RadioGroupDialog(this, ArrayList(items), currentStyle) { selected ->
-        //         config.notificationBadgeStyle = selected as Int
-        //         setupBadgeStyle()
-        //         refreshNotificationBadges()
-        //     }
-        // }
+        binding.settingsBadgeStyleHolder.setOnClickListener {
+            val items = listOf(
+                RadioItem(BADGE_STYLE_DOT, getString(R.string.badge_style_dot)),
+                RadioItem(BADGE_STYLE_COUNT, getString(R.string.badge_style_count)),
+                RadioItem(BADGE_STYLE_LARGE_DOT, getString(R.string.badge_style_large_dot))
+            )
+            RadioGroupDialog(this, ArrayList(items), currentStyle) { selected ->
+                config.notificationBadgeStyle = selected as Int
+                setupBadgeStyle()
+                refreshNotificationBadges()
+            }
+        }
     }
 
     private fun requestNotificationListenerPermission() {
@@ -702,6 +699,238 @@ class SettingsActivity : SimpleActivity() {
                 setupSuggestionsCount()
             }
         }
+    }
+
+    private fun setupDebugTools() {
+        binding.settingsDebugToolsHolder.setOnClickListener {
+            showDebugMenu()
+        }
+    }
+    
+    /**
+     * Show debug menu with various debugging options
+     */
+    private fun showDebugMenu() {
+        val options = arrayOf(
+            "Check Wallpaper Status",
+            "Check View Backgrounds", 
+            "Force Remove All Backgrounds",
+            "Test Wallpaper Methods",
+            "Show View Hierarchy",
+            "Check Widget Visibility",
+            "Full Widget Diagnostic",
+            "Force Widget Visibility",
+            "Export Debug Logs"
+        )
+        
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Debug Tools")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> checkWallpaperStatus()
+                    1 -> checkViewBackgrounds()
+                    2 -> forceRemoveAllBackgrounds()
+                    3 -> testWallpaperMethods()
+                    4 -> showViewHierarchy()
+                    5 -> checkWidgetVisibility()
+                    6 -> performFullWidgetDiagnostic()
+                    7 -> forceWidgetVisibility()
+                    8 -> exportDebugLogs()
+                }
+            }
+            .show()
+    }
+    
+    private fun checkWallpaperStatus() {
+        val sb = StringBuilder()
+        sb.appendLine("=== WALLPAPER STATUS ===")
+        
+        try {
+            val wallpaperManager = android.app.WallpaperManager.getInstance(this)
+            sb.appendLine("WallpaperManager: Available")
+            sb.appendLine("Drawable: ${wallpaperManager.drawable != null}")
+            sb.appendLine("FastDrawable: ${wallpaperManager.fastDrawable != null}")
+            
+            try {
+                val wallpaperInfo = wallpaperManager.wallpaperInfo
+                sb.appendLine("WallpaperInfo: $wallpaperInfo")
+            } catch (e: Exception) {
+                sb.appendLine("WallpaperInfo: ${e.message}")
+            }
+        } catch (e: Exception) {
+            sb.appendLine("WallpaperManager Error: ${e.message}")
+        }
+        
+        sb.appendLine("\n=== WINDOW FLAGS ===")
+        sb.appendLine("FLAG_SHOW_WALLPAPER: ${window.attributes.flags and android.view.WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER != 0}")
+        sb.appendLine("All Flags: ${window.attributes.flags}")
+        
+        showDebugDialog("Wallpaper Status", sb.toString())
+    }
+    
+    private fun checkViewBackgrounds() {
+        val sb = StringBuilder()
+        sb.appendLine("=== VIEW BACKGROUNDS ===")
+        
+        sb.appendLine("Settings Coordinator: ${binding.settingsCoordinator.background}")
+        sb.appendLine("Settings Holder: ${binding.settingsHolder.background}")
+        sb.appendLine("Settings Toolbar: ${binding.settingsToolbar.background}")
+        
+        sb.appendLine("\n=== BACKGROUND COLORS ===")
+        sb.appendLine("Settings Coordinator Color: ${binding.settingsCoordinator.backgroundTintList}")
+        sb.appendLine("Settings Holder Color: ${binding.settingsHolder.backgroundTintList}")
+        
+        showDebugDialog("View Backgrounds", sb.toString())
+    }
+    
+    private fun forceRemoveAllBackgrounds() {
+        binding.settingsCoordinator.background = null
+        binding.settingsHolder.background = null
+        binding.settingsToolbar.background = null
+        
+        // Also remove background tint lists
+        binding.settingsCoordinator.backgroundTintList = null
+        binding.settingsHolder.backgroundTintList = null
+        
+        android.util.Log.d("WallpaperDebug", "Force removed all settings backgrounds")
+        toast("All backgrounds removed")
+    }
+    
+    private fun testWallpaperMethods() {
+        val sb = StringBuilder()
+        sb.appendLine("=== TESTING WALLPAPER METHODS ===")
+        
+        try {
+            val wallpaperManager = android.app.WallpaperManager.getInstance(this)
+            
+            // Test 1: Try to get wallpaper drawable
+            try {
+                val drawable = wallpaperManager.drawable
+                sb.appendLine("✓ Wallpaper drawable: ${drawable != null}")
+                if (drawable != null) {
+                    sb.appendLine("  Size: ${drawable.intrinsicWidth}x${drawable.intrinsicHeight}")
+                }
+            } catch (e: Exception) {
+                sb.appendLine("✗ Wallpaper drawable failed: ${e.message}")
+            }
+            
+            // Test 2: Try to get fast drawable
+            try {
+                val fastDrawable = wallpaperManager.fastDrawable
+                sb.appendLine("✓ Fast drawable: ${fastDrawable != null}")
+            } catch (e: Exception) {
+                sb.appendLine("✗ Fast drawable failed: ${e.message}")
+            }
+            
+        } catch (e: Exception) {
+            sb.appendLine("✗ WallpaperManager failed: ${e.message}")
+        }
+        
+        showDebugDialog("Wallpaper Methods Test", sb.toString())
+    }
+    
+    private fun showViewHierarchy() {
+        val sb = StringBuilder()
+        sb.appendLine("=== VIEW HIERARCHY ===")
+        
+        fun printView(view: android.view.View, depth: Int = 0) {
+            val indent = "  ".repeat(depth)
+            val className = view.javaClass.simpleName
+            val background = view.background?.javaClass?.simpleName ?: "null"
+            val visibility = when (view.visibility) {
+                android.view.View.VISIBLE -> "VISIBLE"
+                android.view.View.INVISIBLE -> "INVISIBLE"
+                android.view.View.GONE -> "GONE"
+                else -> "UNKNOWN"
+            }
+            
+            sb.appendLine("$indent$className (bg: $background, vis: $visibility)")
+            
+            if (view is android.view.ViewGroup) {
+                for (i in 0 until view.childCount) {
+                    printView(view.getChildAt(i), depth + 1)
+                }
+            }
+        }
+        
+        printView(binding.root)
+        showDebugDialog("View Hierarchy", sb.toString())
+    }
+    
+    private fun checkWidgetVisibility() {
+        val widgetInfo = StringBuilder()
+        widgetInfo.appendLine("=== WIDGET VISIBILITY CHECK ===")
+        widgetInfo.appendLine("Note: This check requires access to MainActivity")
+        widgetInfo.appendLine("Please use the debug logs to check widget visibility")
+        widgetInfo.appendLine("")
+        widgetInfo.appendLine("To check widget visibility:")
+        widgetInfo.appendLine("1. Go to MainActivity")
+        widgetInfo.appendLine("2. Check the WidgetDebug logs in logcat")
+        widgetInfo.appendLine("3. Look for 'Widget placed' and 'Widget positioned' messages")
+        
+        showDebugDialog("Widget Visibility Check", widgetInfo.toString())
+    }
+    
+    private fun performFullWidgetDiagnostic() {
+        try {
+            // Log widget host status
+            org.fossify.home.utils.WidgetDebugger.logWidgetHostStatus(this)
+            showDebugDialog("Widget Diagnostic", "Widget diagnostic completed. Check logcat for detailed results.")
+        } catch (e: Exception) {
+            showDebugDialog("Widget Diagnostic Error", "Error: ${e.message}")
+        }
+    }
+    
+    private fun forceWidgetVisibility() {
+        try {
+            showDebugDialog("Force Widget Visibility", "This feature requires access to MainActivity. Please use the debug logs to check widget visibility.")
+        } catch (e: Exception) {
+            showDebugDialog("Force Widget Visibility Error", "Error: ${e.message}")
+        }
+    }
+    
+    private fun exportDebugLogs() {
+        val sb = StringBuilder()
+        sb.appendLine("=== DEBUG LOG EXPORT ===")
+        sb.appendLine("Timestamp: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())}")
+        sb.appendLine("Package: ${packageName}")
+        sb.appendLine("Version: ${packageManager.getPackageInfo(packageName, 0).versionName}")
+        
+        sb.appendLine("\n=== WALLPAPER INFO ===")
+        try {
+            val wallpaperManager = android.app.WallpaperManager.getInstance(this)
+            sb.appendLine("Drawable available: ${wallpaperManager.drawable != null}")
+            sb.appendLine("FastDrawable available: ${wallpaperManager.fastDrawable != null}")
+        } catch (e: Exception) {
+            sb.appendLine("Error: ${e.message}")
+        }
+        
+        sb.appendLine("\n=== VIEW BACKGROUNDS ===")
+        sb.appendLine("Settings Coordinator: ${binding.settingsCoordinator.background}")
+        sb.appendLine("Settings Holder: ${binding.settingsHolder.background}")
+        sb.appendLine("Settings Toolbar: ${binding.settingsToolbar.background}")
+        
+        // Copy to clipboard
+        val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        val clip = android.content.ClipData.newPlainText("Debug Logs", sb.toString())
+        clipboard.setPrimaryClip(clip)
+        
+        toast("Debug logs copied to clipboard")
+        android.util.Log.d("WallpaperDebug", "Debug logs exported:\n${sb.toString()}")
+    }
+    
+    private fun showDebugDialog(title: String, message: String) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("Copy to Clipboard") { _, _ ->
+                val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                val clip = android.content.ClipData.newPlainText("Debug Info", message)
+                clipboard.setPrimaryClip(clip)
+                toast("Copied to clipboard")
+            }
+            .setNegativeButton("Close", null)
+            .show()
     }
 
     // About screen removed for a blank, unbranded experience.

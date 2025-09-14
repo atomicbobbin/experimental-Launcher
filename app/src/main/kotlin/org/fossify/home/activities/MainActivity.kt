@@ -28,6 +28,7 @@ import android.telecom.TelecomManager
 import android.view.GestureDetector
 import android.view.Menu
 import android.view.MotionEvent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
 import androidx.core.view.GestureDetectorCompat
@@ -98,6 +99,7 @@ import org.fossify.home.utils.ErrorHandler
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import kotlinx.coroutines.delay
 
 class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
     // Component managers
@@ -120,6 +122,57 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
     private var mIgnoreMoveEvents: Boolean = false
 
     private val binding by viewBinding(ActivityMainBinding::inflate)
+
+    // Activity Result Launchers for modern API
+    private val setDefaultLauncherLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        // Handle set default launcher result
+        Logger.d("MainActivity", "Set default launcher result: ${result.resultCode}")
+    }
+
+    private val uninstallAppLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            ensureBackgroundThread {
+                refreshLaunchers()
+            }
+        }
+    }
+
+    private val widgetBindingLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        actionOnCanBindWidget?.invoke(result.resultCode == RESULT_OK)
+    }
+
+    private val widgetConfigureLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        actionOnWidgetConfiguredWidget?.invoke(result.resultCode == RESULT_OK)
+    }
+
+    private val createShortcutLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK && result.data != null) {
+            val launcherApps = applicationContext.getSystemService(LAUNCHER_APPS_SERVICE) as LauncherApps
+            if (launcherApps.hasShortcutHostPermission()) {
+                val item = launcherApps.getPinItemRequest(result.data!!)
+                val shortcutInfo = item?.shortcutInfo ?: return@registerForActivityResult
+                if (item.accept()) {
+                    val shortcutId = shortcutInfo.id
+                    val label = shortcutInfo.getLabel()
+                    val icon = launcherApps.getShortcutBadgedIconDrawable(
+                        shortcutInfo,
+                        resources.displayMetrics.densityDpi
+                    )
+                    actionOnAddShortcut?.invoke(shortcutId, label, icon)
+                }
+            }
+        }
+    }
 
     private val settingsReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -157,6 +210,12 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
         Logger.methodEntry("onCreate", savedInstanceState)
         
         try {
+            // Performance optimization: Enable hardware acceleration
+            window.setFlags(
+                android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+                android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
+            )
+            
             // Ensure ServiceLocator is initialized
             if (!ServiceLocator.isInitialized()) {
                 ServiceLocator.initialize(this)
@@ -167,8 +226,8 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
             super.onCreate(savedInstanceState)
             setContentView(binding.root)
             
-            // Make the main layout transparent so wallpaper shows through
-            binding.root.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            // Use FLAG_SHOW_WALLPAPER as the primary method for wallpaper display
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
             
             appLaunched(BuildConfig.APPLICATION_ID)
 
@@ -176,6 +235,28 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
             initializeComponentManagers()
 
             WindowCompat.setDecorFitsSystemWindows(window, false)
+            
+            // Remove background colors that are blocking the wallpaper
+            binding.mainHolder.background = null
+            binding.homeScreenGrid.root.background = null
+            binding.homeScreenGrid.root.findViewById<org.fossify.home.views.HomeScreenGridDrawingArea>(org.fossify.home.R.id.drawing_area)?.background = null
+            
+            // Request wallpaper permission if needed
+            requestWallpaperPermission()
+            
+            // Set wallpaper to ImageView as fallback
+            binding.root.post {
+                try {
+                    val wallpaperManager = android.app.WallpaperManager.getInstance(this@MainActivity)
+                    val wallpaperDrawable = wallpaperManager.drawable
+                    if (wallpaperDrawable != null) {
+                        binding.wallpaperBackground.setImageDrawable(wallpaperDrawable)
+                        binding.wallpaperBackground.visibility = android.view.View.VISIBLE
+                    }
+                } catch (e: Exception) {
+                    Logger.w("MainActivity", "Failed to set wallpaper to ImageView", e)
+                }
+            }
             
             Logger.methodExit("onCreate")
         } catch (e: Exception) {
@@ -213,6 +294,33 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
         // Register broadcast receivers for settings changes
         registerSettingsBroadcastReceivers()
     }
+    
+    /**
+     * Refresh widgets to ensure they're properly visible
+     */
+    private fun refreshWidgets() {
+        try {
+            // Force a redraw of the home screen grid
+            binding.homeScreenGrid.root.post {
+                binding.homeScreenGrid.root.invalidate()
+                binding.homeScreenGrid.root.requestLayout()
+                
+                // Ensure all widget views are visible if they should be
+                binding.homeScreenGrid.root.publicWidgetViews.forEach { widgetView ->
+                    if (widgetView is org.fossify.home.views.MyAppWidgetHostView) {
+                        // Force widget to update its content
+                        widgetView.post {
+                            widgetView.invalidate()
+                            widgetView.requestLayout()
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Logger.e("MainActivity", "Error refreshing widgets", e)
+        }
+    }
+    
     
     /**
      * Initialize all component managers.
@@ -260,7 +368,11 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
             addAction("org.fossify.home.REFRESH_BADGES")
             addAction("org.fossify.home.REFRESH_WALLPAPER")
         }
-        registerReceiver(settingsReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(settingsReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(settingsReceiver, filter)
+        }
     }
 
     private fun refreshBlurEffects() {
@@ -278,9 +390,39 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
     override fun onDestroy() {
         super.onDestroy()
         try {
+            // Performance optimization: Clean up resources
             unregisterReceiver(settingsReceiver)
+            
+            // Clear callback references to prevent memory leaks
+            actionOnCanBindWidget = null
+            actionOnWidgetConfiguredWidget = null
+            actionOnAddShortcut = null
+            
+            // Stop widget host listening
+            try {
+                binding.homeScreenGrid.root.appWidgetHost.stopListening()
+            } catch (e: Exception) {
+                Logger.w("MainActivity", "Error stopping widget host", e)
+            }
+            
+            // Clear icon cache to free memory
+            IconCache.clear()
+            
+            // Clean up component managers
+            if (::touchEventManager.isInitialized) {
+                touchEventManager.cleanup()
+            }
+            if (::fragmentManager.isInitialized) {
+                fragmentManager.cleanup()
+            }
+            if (::menuManager.isInitialized) {
+                menuManager.cleanup()
+            }
+            
         } catch (e: IllegalArgumentException) {
             // Receiver was not registered
+        } catch (e: Exception) {
+            Logger.e("MainActivity", "Error in onDestroy", e)
         }
     }
 
@@ -338,6 +480,12 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
 
         // Ensure latest desktop state (e.g., auto-added icons) is reflected
         binding.homeScreenGrid.root.fetchGridItems()
+        
+        // Refresh wallpaper in case it was changed while app was in background
+        binding.homeScreenGrid.root.refreshWallpaper()
+        
+        // Refresh widgets to ensure they're visible
+        refreshWidgets()
 
         ensureBackgroundThread {
             if (IconCache.launchers.isEmpty()) {
@@ -350,7 +498,8 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
                     if (!showIcon) {
                         try {
                             launchersDB.deleteById(it.id!!)
-                        } catch (_: Exception) {
+                        } catch (e: Exception) {
+                            Logger.w("MainActivity", "Failed to delete launcher from database", e)
                         }
                     }
                     showIcon
@@ -362,7 +511,7 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
         }
 
         // avoid showing fully colored navigation bars
-        if (window.navigationBarColor != resources.getColor(R.color.semitransparent_navigation)) {
+        if (window.navigationBarColor != androidx.core.content.ContextCompat.getColor(this, R.color.semitransparent_navigation)) {
             window.navigationBarColor = Color.TRANSPARENT
         }
 
@@ -378,7 +527,8 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
         super.onStop()
         try {
             binding.homeScreenGrid.root.appWidgetHost.stopListening()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Logger.w("MainActivity", "Error stopping widget host in onStop", e)
         }
 
         wasJustPaused = false
@@ -405,39 +555,8 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, resultData: Intent?) {
-        super.onActivityResult(requestCode, resultCode, resultData)
-
-        when (requestCode) {
-            UNINSTALL_APP_REQUEST_CODE -> {
-                ensureBackgroundThread {
-                    refreshLaunchers()
-                }
-            }
-
-            REQUEST_ALLOW_BINDING_WIDGET -> actionOnCanBindWidget?.invoke(resultCode == RESULT_OK)
-            REQUEST_CONFIGURE_WIDGET -> actionOnWidgetConfiguredWidget?.invoke(resultCode == RESULT_OK)
-            REQUEST_CREATE_SHORTCUT -> {
-                if (resultCode == RESULT_OK && resultData != null) {
-                    val launcherApps =
-                        applicationContext.getSystemService(LAUNCHER_APPS_SERVICE) as LauncherApps
-                    if (launcherApps.hasShortcutHostPermission()) {
-                        val item = launcherApps.getPinItemRequest(resultData)
-                        val shortcutInfo = item?.shortcutInfo ?: return
-                        if (item.accept()) {
-                            val shortcutId = shortcutInfo.id
-                            val label = shortcutInfo.getLabel()
-                            val icon = launcherApps.getShortcutBadgedIconDrawable(
-                                shortcutInfo,
-                                resources.displayMetrics.densityDpi
-                            )
-                            actionOnAddShortcut?.invoke(shortcutId, label, icon)
-                        }
-                    }
-                }
-            }
-        }
-    }
+    // Note: onActivityResult is deprecated and replaced with Activity Result API
+    // All activity results are now handled by the registered launchers above
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
@@ -458,7 +577,8 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
 
         try {
             detector.onTouchEvent(event)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Logger.w("MainActivity", "Error in gesture detection", e)
         }
 
         when (event.actionMasked) {
@@ -605,13 +725,15 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
                 runOnUiThread {
                     binding.homeScreenGrid.root.skipToPage(page)
                 }
-                // delay showing the shortcut both to let the user see adding it in realtime and hackily avoid concurrent modification exception at HomeScreenGrid
-                Thread.sleep(2000)
+                
+                // Use proper coroutine delay instead of blocking main thread
+                kotlinx.coroutines.delay(2000)
 
                 try {
                     item.accept()
                     binding.homeScreenGrid.root.storeAndShowGridItem(gridItem)
-                } catch (_: IllegalStateException) {
+                } catch (e: IllegalStateException) {
+                    Logger.w("MainActivity", "Failed to accept shortcut item", e)
                 }
             }
         }
@@ -919,9 +1041,8 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
 
     private fun requestHomeRole() {
         if (isQPlus()) {
-            startActivityForResult(
-                roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME),
-                REQUEST_SET_DEFAULT
+            setDefaultLauncherLauncher.launch(
+                roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME)
             )
         }
     }
@@ -1028,7 +1149,8 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
                 Class.forName("android.app.StatusBarManager")
                     .getMethod("expandNotificationsPanel")
                     .invoke(getSystemService("statusbar"))
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                Logger.w("MainActivity", "Failed to expand notification panel", e)
             }
         }
     }
@@ -1087,7 +1209,8 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
                     )
                 homeScreenGridItems.add(dialerIcon)
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Logger.w("MainActivity", "Failed to get default dialer package", e)
         }
 
         try {
@@ -1114,7 +1237,8 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
                     )
                 homeScreenGridItems.add(messengerIcon)
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Logger.w("MainActivity", "Failed to get default SMS package", e)
         }
 
         try {
@@ -1144,7 +1268,8 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
                     )
                 homeScreenGridItems.add(browserIcon)
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Logger.w("MainActivity", "Failed to get default browser package", e)
         }
 
         try {
@@ -1177,7 +1302,8 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
                     homeScreenGridItems.add(storeIcon)
                 }
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Logger.w("MainActivity", "Failed to get default store package", e)
         }
 
         try {
@@ -1207,7 +1333,8 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
                     )
                 homeScreenGridItems.add(cameraIcon)
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Logger.w("MainActivity", "Failed to get default camera package", e)
         }
 
         homeScreenGridItemsDB.insertAll(homeScreenGridItems)
@@ -1229,7 +1356,7 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
             Intent(AppWidgetManager.ACTION_APPWIDGET_BIND).apply {
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER, appWidgetInfo.provider)
-                startActivityForResult(this, REQUEST_ALLOW_BINDING_WIDGET)
+                widgetBindingLauncher.launch(this)
             }
         }
     }
@@ -1257,7 +1384,7 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
         val componentName = ComponentName(activityInfo.packageName, activityInfo.name)
         Intent(Intent.ACTION_CREATE_SHORTCUT).apply {
             component = componentName
-            startActivityForResult(this, REQUEST_CREATE_SHORTCUT)
+            createShortcutLauncher.launch(this)
         }
     }
 
@@ -1265,6 +1392,7 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
         WindowCompat.getInsetsController(window, binding.root).isAppearanceLightStatusBars =
             backgroundColor.getContrastColor() == DARK_GREY
     }
+    
 
     // taken from https://gist.github.com/maxjvh/a6ab15cbba9c82a5065d
     private fun calculateAverageColor(bitmap: Bitmap): Int {
@@ -1287,5 +1415,51 @@ class MainActivity : SimpleActivity(), FlingListener, GestureHandlerCallback {
         }
 
         return Color.rgb(red / n, green / n, blue / n)
+    }
+    
+    /**
+     * Request wallpaper permission if needed
+     */
+    private fun requestWallpaperPermission() {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                if (checkSelfPermission(android.Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(arrayOf(android.Manifest.permission.READ_MEDIA_IMAGES), 1001)
+                }
+            } else {
+                // For older Android versions, check READ_EXTERNAL_STORAGE
+                if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 1002)
+                }
+            }
+        } catch (e: Exception) {
+            Logger.e("MainActivity", "Error requesting wallpaper permission", e)
+        }
+    }
+    
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        try {
+            when (requestCode) {
+                1001 -> { // READ_MEDIA_IMAGES (Android 13+)
+                    if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                        // Refresh wallpaper now that we have permission
+                        binding.homeScreenGrid.root.refreshWallpaper()
+                    } else {
+                        toast("Wallpaper permission denied - wallpaper may not display properly")
+                    }
+                }
+                1002 -> { // READ_EXTERNAL_STORAGE (Android 12 and below)
+                    if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                        // Refresh wallpaper now that we have permission
+                        binding.homeScreenGrid.root.refreshWallpaper()
+                    } else {
+                        toast("Wallpaper permission denied - wallpaper may not display properly")
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Logger.e("MainActivity", "Error handling permission result", e)
+        }
     }
 }

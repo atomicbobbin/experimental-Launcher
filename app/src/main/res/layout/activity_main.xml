@@ -4,6 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Wallpaper background layer -->
+    <ImageView
+        android:id="@+id/wallpaper_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
+
     <include
         android:id="@+id/home_screen_grid"
         layout="@layout/home_screen_grid" />

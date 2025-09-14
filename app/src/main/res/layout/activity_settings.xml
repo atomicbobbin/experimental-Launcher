@@ -771,6 +771,33 @@
                     tools:text="Dot" />
 
             </RelativeLayout>
+
+            <include
+                android:id="@+id/settings_visual_effects_divider"
+                layout="@layout/divider" />
+
+            <TextView
+                android:id="@+id/settings_debug_tools_label"
+                style="@style/SettingsSectionLabelStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Debug Tools" />
+
+            <RelativeLayout
+                android:id="@+id/settings_debug_tools_holder"
+                style="@style/SettingsHolderTextViewOneLinerStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ripple_background">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_debug_tools_label_text"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Debug Tools" />
+
+            </RelativeLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
