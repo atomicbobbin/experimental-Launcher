@@ -353,13 +353,17 @@ class SettingsActivity : SimpleActivity() {
 
     private fun refreshHomeScreenGrid() {
         // Notify MainActivity to refresh the home screen grid
-        val intent = Intent("org.fossify.home.REFRESH_GRID")
+        val intent = Intent("org.fossify.home.REFRESH_GRID").apply {
+            setPackage(packageName)
+        }
         sendBroadcast(intent)
     }
 
     private fun refreshDrawerIcons() {
         // Notify MainActivity to refresh the drawer icons
-        val intent = Intent("org.fossify.home.REFRESH_DRAWER")
+        val intent = Intent("org.fossify.home.REFRESH_DRAWER").apply {
+            setPackage(packageName)
+        }
         sendBroadcast(intent)
     }
 
@@ -406,7 +410,9 @@ class SettingsActivity : SimpleActivity() {
 
     private fun refreshBlurEffects() {
         // Notify MainActivity to refresh blur effects
-        val intent = Intent("org.fossify.home.REFRESH_BLUR")
+        val intent = Intent("org.fossify.home.REFRESH_BLUR").apply {
+            setPackage(packageName)
+        }
         sendBroadcast(intent)
     }
 
@@ -439,7 +445,9 @@ class SettingsActivity : SimpleActivity() {
 
     private fun refreshTransitionEffects() {
         // Notify MainActivity to refresh transition effects
-        val intent = Intent("org.fossify.home.REFRESH_TRANSITIONS")
+        val intent = Intent("org.fossify.home.REFRESH_TRANSITIONS").apply {
+            setPackage(packageName)
+        }
         sendBroadcast(intent)
     }
 
@@ -510,7 +518,9 @@ class SettingsActivity : SimpleActivity() {
 
     private fun refreshNotificationBadges() {
         // Notify MainActivity to refresh notification badges
-        val intent = Intent("org.fossify.home.REFRESH_BADGES")
+        val intent = Intent("org.fossify.home.REFRESH_BADGES").apply {
+            setPackage(packageName)
+        }
         sendBroadcast(intent)
     }
 

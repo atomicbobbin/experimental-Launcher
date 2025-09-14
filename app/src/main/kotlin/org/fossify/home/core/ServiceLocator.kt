@@ -1,5 +1,6 @@
 package org.fossify.home.core
 
+import android.annotation.SuppressLint
 import android.content.Context
 import org.fossify.home.backup.BackupManager
 import org.fossify.home.data.SettingsRepository
@@ -19,24 +20,29 @@ object ServiceLocator {
     @Volatile
     private var initialized: Boolean = false
 
+    @SuppressLint("StaticFieldLeak")
     lateinit var deviceCapabilities: DeviceCapabilities
         private set
 
     lateinit var settingsRepository: SettingsRepository
         private set
 
+    @SuppressLint("StaticFieldLeak")
     lateinit var themeManager: ThemeManager
         private set
 
     lateinit var gestureRouter: GestureRouter
         private set
 
+    @SuppressLint("StaticFieldLeak")
     lateinit var searchRegistry: SearchRegistry
         private set
 
+    @SuppressLint("StaticFieldLeak")
     lateinit var iconResolver: IconResolver
         private set
 
+    @SuppressLint("StaticFieldLeak")
     lateinit var backupManager: BackupManager
         private set
 

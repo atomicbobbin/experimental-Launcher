@@ -32,4 +32,7 @@
     <issue id="GradleDependency" severity="warning" />
     <issue id="Overdraw" severity="warning" />
     <issue id="ExtraTranslation" severity="warning" />
+    
+    <!-- Ignore local.properties file issues -->
+    <issue id="PropertyEscape" severity="ignore" />
 </lint>

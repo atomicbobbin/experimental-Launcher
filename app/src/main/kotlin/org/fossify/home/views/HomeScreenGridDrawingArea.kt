@@ -1,5 +1,6 @@
 package org.fossify.home.views
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
@@ -21,6 +22,7 @@ class HomeScreenGridDrawingArea @JvmOverloads constructor(
     private fun loadWallpaper() {
         try {
             val wallpaperManager = WallpaperManager.getInstance(context)
+            @SuppressLint("MissingPermission")
             wallpaperDrawable = wallpaperManager.drawable
             Log.d("Wallpaper", "Wallpaper loaded successfully")
         } catch (e: SecurityException) {
